@@ -1,0 +1,15 @@
+﻿<Window x:Class="HydraX.ProgressWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HydraX"
+        mc:Ignorable="d"
+        Title="Working...." Height="183" Width="400" WindowStartupLocation="CenterOwner"
+        Closing="WindowClosing" ResizeMode="NoResize" WindowStyle="ToolWindow">
+    <Grid Background="#FF1B1B1B">
+        <Label x:Name="Message" Content="Exporting Assets..." Margin="10,10,10,0" VerticalAlignment="Top" Height="52" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Foreground="White" FontSize="22"/>
+        <Button Content="Cancel" Margin="309,0,0,10" Click="CancelClick" VerticalAlignment="Bottom" Height="25" HorizontalAlignment="Left" Width="75" ToolTip="Cancel the current task."/>
+        <ProgressBar x:Name="ProgressBar" Height="Auto" Margin="10,67,10,51" Background="#FF1B1B1B" Foreground="White"/>
+    </Grid>
+</Window>

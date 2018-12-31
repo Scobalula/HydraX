@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{89CB89BD-83CF-4DE4-A0C1-F9E5253C72BF}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>HydraLib</RootNamespace>
+    <AssemblyName>HydraLib</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Asset.cs" />
+    <Compile Include="AssetPool.cs" />
+    <Compile Include="Assets\AI\AnimationMapObj.cs" />
+    <Compile Include="Assets\AI\AnimationSelectorObj.cs" />
+    <Compile Include="Assets\AI\AnimationStateMachineObj.cs" />
+    <Compile Include="Assets\AI\BehaviorObj.cs" />
+    <Compile Include="Assets\Character\PlayerBodyObj.cs" />
+    <Compile Include="Assets\Character\PlayerHelmetStyleObj.cs" />
+    <Compile Include="Assets\Character\PlayerBodyStyleObj.cs" />
+    <Compile Include="Assets\Character\PlayerHeadObj.cs" />
+    <Compile Include="Assets\MetaData\StructuredTableObj.cs" />
+    <Compile Include="Assets\Physics\PhysicsPresetObj.cs" />
+    <Compile Include="Assets\Physics\RumbleObj.cs" />
+    <Compile Include="Assets\Sound\SoundSourceObj.cs" />
+    <Compile Include="Assets\Animation\XCamObj.cs" />
+    <Compile Include="Assets\WeaponCamoObj.cs" />
+    <Compile Include="Assets\Zombies\ZBarrierObj.cs" />
+    <Compile Include="Game.cs" />
+    <Compile Include="GameDBInfo.cs" />
+    <Compile Include="Games\BlackOps3\Assets\WeaponCamo.cs" />
+    <Compile Include="Games\BlackOps3\Assets\Rumble.cs" />
+    <Compile Include="Games\BlackOps3\Assets\PhysicsPreset.cs" />
+    <Compile Include="Games\BlackOps3\Assets\ZBarrier.cs" />
+    <Compile Include="Games\BlackOps3\Assets\AnimationMappingTable.cs" />
+    <Compile Include="Games\BlackOps3\Assets\AnimationSelectorTable.cs" />
+    <Compile Include="Games\BlackOps3\Assets\BehaviorTree.cs" />
+    <Compile Include="Games\BlackOps3\Assets\AnimationStateMachine.cs" />
+    <Compile Include="Games\BlackOps3\Assets\CustomizationTable.cs" />
+    <Compile Include="Games\BlackOps3\Assets\Localize.cs" />
+    <Compile Include="Games\BlackOps3\Assets\RawFile.cs" />
+    <Compile Include="Games\BlackOps3\Assets\Sound.cs" />
+    <Compile Include="Games\BlackOps3\Assets\StringTable.cs" />
+    <Compile Include="Games\BlackOps3\Assets\StructuredTable.cs" />
+    <Compile Include="Games\BlackOps3\Assets\XCam.cs" />
+    <Compile Include="Games\BlackOps3\BlackOps3.cs" />
+    <Compile Include="Games\CommonStructures\Vector2.cs" />
+    <Compile Include="Games\CommonStructures\Vector3.cs" />
+    <Compile Include="Games\CommonStructures\Vector4.cs" />
+    <Compile Include="Hydra.cs" />
+    <Compile Include="HydraUpdater.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utility\GameDataTable.cs" />
+    <Compile Include="Utility\Matrix.cs" />
+    <Compile Include="Utility\Quaternion.cs" />
+    <Compile Include="Utility\Vector3.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PhilLibX\PhilLibX.csproj">
+      <Project>{8f5c1ba4-88c1-4177-b91b-dd093dc849b9}</Project>
+      <Name>PhilLibX</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
