@@ -22,6 +22,15 @@ HydraX can decompile the following asset types:
 | WeaponCamo                                                   |
 | XCam                                                         |
 
+For assets that are exported to GDTs, Hydra will bundle them into different GDTs in the source_data folder of the export directory:
+
+* camo_assets = Weapon Camos 
+* character_assets = Character Assets (Customization Tables, etc)
+* misc_assets = ZBarriers 
+* physic_assets = Physics Presets and Rumble
+* table_assets = Unused, for future ImpactFX, etc. assets
+* xcams_assets = XCams
+
 # Credits
 
 * Harry Bo21 - Tons of testing and feedback (especially on the AI files)
