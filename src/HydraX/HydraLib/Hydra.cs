@@ -128,47 +128,18 @@ namespace HydraLib
         }
 
         /// <summary>
+        /// Cleans Sound Name 
+        /// </summary>
+        public static string CleanSoundName(string soundName)
+        {
+            return String.IsNullOrWhiteSpace(soundName) ? "" : Path.ChangeExtension(soundName.Split('.')[0], ".wav");
+        }
+
+        /// <summary>
         /// Loads Assets from any Call of Duty Process.
         /// </summary>
         public static HydraStatus LoadAssets()
         {
-            /*
-            var x = new GameDataTable("test.gdt");
-
-            using (var writer = new StreamWriter("output.txt"))
-            {
-                // foreach (var asset in x.Assets)
-                {
-                    // foreach (var property in asset.Value.Properties)
-                    {
-                        /*
-                        writer.WriteLine("");
-                        writer.WriteLine("/// <summary>");
-                        writer.WriteLine("///");
-                        writer.WriteLine("/// </summary>");
-                        writer.WriteLine("[GameDataTable.Property(\"{0}\")]", property.Key);
-                        writer.WriteLine("public string {0} {{ get; set; }}", property.Key.First().ToString().ToUpper() + property.Key.Substring(1));
-                        
-                        writer.WriteLine("\"{0}\",", property.Key);
-                        
-            var ok = new ProcessReader(Process.GetProcessesByName("linker_modtools")[0]);
-
-                        SortedList<int, string> Values = new SortedList<int, string>();
-
-                        for (int i = 0; i < 60; i++)
-                        {
-                            writer.WriteLine(ok.ReadInt32((i * 16 + 140701912718032) + 8));
-                            Values[ok.ReadInt32((i * 16 + 140701912718032) + 8)] = ok.ReadNullTerminatedString(ok.ReadInt64(i * 16 + 140701912718032));
-                        }
-
-                        foreach(var val in Values)
-                        {
-                            writer.WriteLine("\"{0}\",", val.Value);
-                        }
-                    }
-                }
-            }
-            */
             // Clear GDTs
             foreach (var gdt in GDTs)
                 gdt.Value.Assets.Clear();

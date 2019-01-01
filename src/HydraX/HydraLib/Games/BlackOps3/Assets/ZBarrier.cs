@@ -256,8 +256,6 @@ namespace HydraLib.Games
                 // Check name pointer, if it's changed, our asset has changed
                 if (asset.Name != Hydra.ActiveGameReader.ReadNullTerminatedString(zbarrier.NamePointer))
                     return false;
-                // FX Buffer
-                string fxBuffer;
                 // Convert to generic ZBarrier and add base settings for GDT
                 Hydra.GDTs["Misc"].AddAsset(asset.Name, "zbarrier", new ZBarrierObj()
                 {

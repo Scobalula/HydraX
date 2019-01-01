@@ -69,7 +69,7 @@ namespace HydraLib.Games
                 if (asset.Name != Hydra.ActiveGameReader.ReadNullTerminatedString(rawFile.NamePointer))
                     return false;
                 // Create Directory
-                string path = Path.Combine("exported_files", Hydra.ActiveGameName, asset.Name);
+                string path = Path.Combine("exported_files", Hydra.ActiveGameName, asset.Name.Replace(".gsc", ".gscc").Replace(".csc", ".cscc").Replace(".gsh", ".gshc").Replace(".lua", ".luac"));
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 // Resulting buffer
                 byte[] buffer;

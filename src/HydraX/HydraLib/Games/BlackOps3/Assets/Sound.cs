@@ -1033,9 +1033,9 @@ namespace HydraLib.Games
                             StopAlias = Hydra.ActiveGameReader.ReadNullTerminatedString(entry.StopAlias.StringPointer),
 
                             // Read File Specs
-                            FileSpec        = Hydra.ActiveGameReader.ReadNullTerminatedString(entry.FileSpec.FileNamePointer).Split('.')[0] + ".wav",
-                            FileSpecSustain = Hydra.ActiveGameReader.ReadNullTerminatedString(entry.FileSpecSustain.FileNamePointer).Split('.')[0] + ".wav",
-                            FileSpecRelease = Hydra.ActiveGameReader.ReadNullTerminatedString(entry.FileSpecRelease.FileNamePointer).Split('.')[0] + ".wav",
+                            FileSpec        = Hydra.CleanSoundName(Hydra.ActiveGameReader.ReadNullTerminatedString(entry.FileSpec.FileNamePointer)),
+                            FileSpecSustain = Hydra.CleanSoundName(Hydra.ActiveGameReader.ReadNullTerminatedString(entry.FileSpecSustain.FileNamePointer)),
+                            FileSpecRelease = Hydra.CleanSoundName(Hydra.ActiveGameReader.ReadNullTerminatedString(entry.FileSpecRelease.FileNamePointer)),
 
                             // Grab Flags
                             RestartContextLoops = ByteUtil.GetBit(entry.Settings, 63)   != 0 ? "yes" : "no",
