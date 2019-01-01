@@ -14,7 +14,7 @@ HydraX can decompile the following asset types:
 | CustomizationTable (An associated assets such as body types) |
 | Localize (Localized Strings)                                 |
 | PhysPreset                                                   |
-| RawFile (including ttf (fonts) and compiled scripts)         |
+| RawFile (including ttf (fonts))                              |
 | Rumble                                                       |
 | Sound (Aliases)                                              |
 | StringTable                                                  |
@@ -31,11 +31,14 @@ For assets that are exported to GDTs, Hydra will bundle them into different GDTs
 * table_assets = Unused, for future ImpactFX, etc. assets
 * xcams_assets = XCams
 
+Scripts and LUA files can be exported, but cannot be decompiled. To dissassemble LUA files, use Jari's [LUA Dissassembler](https://github.com/JariKCoding/T7-8-LuaDissassembler).
+
 # Credits
 
 * Harry Bo21 - Tons of testing and feedback (especially on the AI files)
 * raptroes - Testing and Feedback
 * DTZxPorter - Heuristic Scan Info and Tips from Wraith
+* RDV/Ardivee - Acoustix 
 * [Hydra Logo](https://thenounproject.com/term/hydra/1389034/)
 
 # Using HydraX
