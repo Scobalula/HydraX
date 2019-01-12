@@ -979,7 +979,7 @@ namespace HydraLib.Games
                     // Create new asset
                     Hydra.LoadedAssets.Add(new Asset()
                     {
-                        Name           = Hydra.ActiveGameReader.ReadNullTerminatedString(soundHeader.SABNamePointer) + ".csv",
+                        Name           = Hydra.ActiveGameReader.ReadNullTerminatedString(soundHeader.SABNamePointer).Split(':')[0] + ".csv",
                         HeaderAddress  = assetPool.FirstEntry + (i * assetPool.HeaderSize),
                         ExportFunction = Export,
                         Type           = assetPool.Name,
@@ -993,7 +993,7 @@ namespace HydraLib.Games
                 // Read Header
                 var soundHeader = Hydra.ActiveGameReader.ReadStruct<SoundHeader>(asset.HeaderAddress);
                 // Check name pointer, if it's changed, our asset has changed
-                if (asset.Name != Hydra.ActiveGameReader.ReadNullTerminatedString(soundHeader.SABNamePointer) + ".csv")
+                if (asset.Name != Hydra.ActiveGameReader.ReadNullTerminatedString(soundHeader.SABNamePointer).Split(':')[0] + ".csv")
                     return false;
                 // Path Result
                 string path = Path.Combine("exported_files", Hydra.ActiveGameName, "sound\\aliases\\", asset.Name);
