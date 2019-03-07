@@ -1,8 +1,8 @@
-![](https://i.imgur.com/DYi5xtS.png)
+# HydraX
 
 HydraX is an asset decompiler for Call of Duty: Black Ops 3. The aim of HydraX is to accurately decompile more specialized and specific files such as AI files, tables, etc. that Treyarch didn't/couldn't provide with the Call of Duty: Black Ops 3 Mod Tools. If you're interested in extracting Models, Images, etc. check out [Greyhound](https://github.com/Scobalula/Greyhound), a fork of Wraith Archon.
 
-HydraX can decompile the following asset types:
+HydraX can decompile/export the following asset types:
 
 | Asset Type/Pool                                              |
 |--------------------------------------------------------------|
@@ -59,7 +59,7 @@ HydraX was developed for the users of the Black Ops III Mod Tools to provide som
 
 ## Support Me
 
-If you use HydraX in any of your projects, it would be appreciated if you credit me, a lot of time and work went into developing it and a simple credit isn't too much to ask for. While I obviously won't come running after you, I do keep track of peopl who at the very least do not provide credit.
+If you use HydraX in any of your projects, it would be appreciated if you credit me, a huge amount of time and work (especially on more intricate assets such as aliases) went into developing it and fine tuning it, and a simple credit isn't too much to ask for. While I obviously won't come running after you, I do keep track of people who at the very least do not provide credit. ;)
 
 If you'd like to support me even more, considering buying me a coffee (I drink a lot of it :x):
 
