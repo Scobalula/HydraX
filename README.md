@@ -55,11 +55,3 @@ Simply launch Black Ops 3 and the level of the assets you want to export, click 
 HydraX is licensed under GPL 3.0. It is provided in the hope it is useful to you but comes WITH NO WARRANTY. The user assumes full responsibility for any damages caused.
 
 HydraX was developed for the users of the Black Ops III Mod Tools to provide some files/information Treyarch couldn't/didn't include with the Mod Tools. All work was done on legally obtained copies of Black Ops III and the Black Ops III Mod Tools. Most of the files it exports, are only useful to those using Black Ops III's Mod Tools. HydraX does not and will never rebuild FFs or provide methods to modify game content. I don't support hacking!
-
-## Support Me
-
-If you use HydraX in any of your projects, it would be appreciated if you credit me, a huge amount of time and work (especially on more intricate assets such as aliases) went into developing it and fine tuning it, and a simple credit isn't too much to ask for. While I obviously won't come running after you, I do keep track of people who at the very least do not provide credit. ;)
-
-If you'd like to support me even more, considering buying me a coffee (I drink a lot of it :x):
-
-[![Donate](https://img.shields.io/badge/Donate-PayPal-yellowgreen.svg)](https://www.paypal.me/scobalula)
