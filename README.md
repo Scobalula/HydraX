@@ -1,6 +1,6 @@
 # HydraX
 
-HydraX is an asset decompiler for Call of Duty: Black Ops 3. The aim of HydraX is to accurately decompile more specialized and specific files such as AI files, tables, etc. that Treyarch didn't/couldn't provide with the Call of Duty: Black Ops 3 Mod Tools. If you're interested in extracting Models, Images, etc. check out [Greyhound](https://github.com/Scobalula/Greyhound), a fork of Wraith Archon.
+HydraX is an asset decompiler for Call of Duty: Black Ops 3 I have been working on since March of 2018, its aim is to accurately decompile more specialized and specific files such as AI files, tables, etc. that Treyarch didn't/couldn't provide with the Call of Duty: Black Ops 3 Mod Tools. If you're interested in extracting Models, Images, etc. check out [Greyhound](https://github.com/Scobalula/Greyhound), a fork of Wraith Archon.
 
 HydraX can decompile/export the following asset types:
 
@@ -10,26 +10,26 @@ HydraX can decompile/export the following asset types:
 | AnimationMappingTable                                        |
 | AnimationSelectorTable                                       |
 | AnimationStateMachine                                        |
+| Attachment                                                   |
+| AttachmentUnique                                             |
 | BehaviorTree                                                 |
-| CustomizationTable (An associated assets such as body types) |
+| Beam                                                         |
+| BehaviorStateMachine                                         |
 | Localize (Localized Strings)                                 |
+| PhysicsConstraints                                           |
 | PhysPreset                                                   |
 | RawFile (including ttf (fonts))                              |
 | Rumble                                                       |
 | Sound (Aliases)                                              |
 | StringTable                                                  |
 | StructuredTable                                              |
+| ScriptBundle (All Types)                                     |
+| Vehicle                                                      |
+| Weapon                                                       |
 | WeaponCamo                                                   |
-| XCam                                                         |
+| ZBarrier                                                     |
 
-For assets that are exported to GDTs, Hydra will bundle them into different GDTs in the source_data folder of the export directory:
-
-* camo_assets = Weapon Camos 
-* character_assets = Character Assets (Customization Tables, etc)
-* misc_assets = ZBarriers 
-* physic_assets = Physics Presets and Rumble
-* table_assets = Unused, for future ImpactFX, etc. assets
-* xcams_assets = XCams
+For assets that are exported to GDTs, Hydra will bundle them into different GDTs in the source_data folder of the export directory.
 
 Scripts and LUA files can be exported, but cannot be decompiled. To dissassemble LUA files, use Jari's [LUA Dissassembler](https://github.com/JariKCoding/T7-8-LuaDissassembler).
 
@@ -37,7 +37,6 @@ Scripts and LUA files can be exported, but cannot be decompiled. To dissassemble
 
 * Harry Bo21 - Tons of testing and feedback (especially on the AI files)
 * raptroes - Testing and Feedback
-* DTZxPorter - Heuristic Scan Info and Tips from Wraith
 * RDV/Ardivee - Acoustix 
 * [Hydra Logo](https://thenounproject.com/term/hydra/1389034/)
 
@@ -48,7 +47,7 @@ Simply launch Black Ops 3 and the level of the assets you want to export, click 
 # Requirements
 
 * Windows 10 64bit officially tested, but Windows 7+ 64bit should work
-* .NET Framework Version 4.6.1
+* .NET Framework Version 4.7.1
 * General understanding of how to use the assets you want to work with
 
 # License/Disclaimers

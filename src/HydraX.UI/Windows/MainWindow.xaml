@@ -1,0 +1,41 @@
+﻿<Window x:Class="HydraX.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Closing="WindowClosing"
+        WindowStartupLocation="CenterScreen"
+        Title="HydraX" Height="480" Width="848" MinHeight="300" MinWidth="750">
+    <Grid Background="#FF252525">
+        <!-- Main Asset List -->
+        <ListView x:Name="AssetListView" Margin="10,43" AlternationCount="2" Background="#FF232323" Foreground="White" BorderBrush="#FF0C0C0C">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Name" Width="400" DisplayMemberBinding="{Binding DisplayName}"/>
+                    <GridViewColumn Header="Type" Width="128" DisplayMemberBinding="{Binding Type}"/>
+                    <GridViewColumn Header="Info" Width="192" DisplayMemberBinding="{Binding Information}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <!-- Number of Loaded Assets -->
+        <Label x:Name="AssetLoadedLabel" Content="0 Assets Loaded" HorizontalContentAlignment="Right" HorizontalAlignment="Right" Margin="0,0,10,10" Width="170" Foreground="White" Height="28" VerticalAlignment="Bottom"/>
+        <!-- Search Box -->
+        <TextBox x:Name="SearchBox" VerticalContentAlignment="Center" TextChanged="SearchBoxTextChanged" HorizontalAlignment="Left" Height="28" Margin="10,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="329" BorderBrush="#FF0C0C0C" Background="#FF2E2E2E" Foreground="White"/>
+        <!-- Load Game Button -->
+        <Button Content="Load Game" Click="LoadGameClick" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="128" Height="28" ToolTip="Loads assets from a supported game's memory."/>
+        <!-- Search Clear Button -->
+        <Button Content="Clear" Click="ClearSearchClick" HorizontalAlignment="Left" Margin="344,10,0,0" VerticalAlignment="Top" Width="80" Height="28" ToolTip="Clear search "/>
+        <!-- Exports Selected Assets -->
+        <!-- Exports All Assets -->
+        <!-- Clears Loaded Assets, Files, etc. -->
+        <!-- Loads the About Window -->
+        <!-- Loads the Settings Window -->
+        <Button Content="Export Selected" Click="ExportSelectedClick"  HorizontalAlignment="Left" Margin="143,0,0,10" VerticalAlignment="Bottom" Width="128" Height="28" ToolTip="Exports selected assets."/>
+        <Button Content="About" Click="AboutButtonClick" HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Width="98" Height="28" ToolTip="Opens the About Window."/>
+        <Button Content="Export All" Click="ExportAllClick"  HorizontalAlignment="Left" Margin="276,0,0,10" VerticalAlignment="Bottom" Width="100" Height="28" ToolTip="Exports all listed assets."/>
+        <Button Content="Clear" Click="ClearAssetsClick"  HorizontalAlignment="Left" Margin="381,0,0,10" VerticalAlignment="Bottom" Width="96" Height="28" ToolTip="Clears loaded assets."/>
+        <!-- Dim Box for when dialogs are active -->
+        <Rectangle x:Name="DimBox" Fill="#82000000" Visibility="Hidden"/>
+    </Grid>
+</Window>
