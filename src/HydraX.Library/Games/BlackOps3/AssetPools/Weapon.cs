@@ -2286,7 +2286,7 @@ namespace HydraX.Library
                         AssetPool = this,
                         Size = AssetSize,
                         Type = Name,
-                        Information = "Type: " + WeaponTypes[instance.Reader.ReadInt32(instance.Reader.ReadInt64(address + 0x18) + 0x6C)]
+                        Information = "N/A"
                     });
                 }
 
@@ -2331,7 +2331,40 @@ namespace HydraX.Library
 
                 var result = GameDataTable.ConvertStructToGDTAsset(assetBuffer, WeaponOffsets, instance, HandleAttachmentSettings);
 
-                result.Type = (string)result["weaponType"] + "weapon";
+                var weaponType = (string)result["weaponType"];
+                var isDualWield = (byte)result["dualWield"] == 1;
+
+                // This is a workaround for the fact that the gdf type is discarded 
+                // and linker only references it for gdtdb look ups
+
+                if(isDualWield)
+                {
+                    // Check for right hand
+                    if ((string)result["viewmodelTag"] == "tag_weapon_right")
+                        result.Type = weaponType == "projectile" ? "projectile" : "bullet" + "weapon";
+                    else
+                        result.Type = "dualwield" + weaponType == "projectile" ? "projectile" : "bullet" + "weapon";
+
+                }
+                // For turrets, check minHorTurnSpeed, it has to be at least 1
+                else if ((float)result["minHorTurnSpeed"] >= 1.0f)
+                {
+                    result.Type = "turretweapon";
+                }
+                // For bullet/gas/projectile, check maxDist, it has to be at least 1
+                else if ((float)result["maxDist"] >= 1.0f)
+                {
+                    if ((string)result["weaponType"] == "projectile" || (string)result["weaponType"] == "bomb")
+                        result.Type = "projectileweapon";
+                    else if ((string)result["weaponType"] == "gas")
+                        result.Type = "gasweapon";
+                    else
+                        result.Type = "bulletweapon";
+                }
+                else
+                {
+                    result.Type = weaponType + "weapon";
+                }
 
                 // Add to GDT
                 instance.GDTs["Weapon"][asset.Name] = result;

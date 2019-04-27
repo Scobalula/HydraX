@@ -43,6 +43,11 @@ namespace HydraX.Library
         public ProcessReader Reader { get; set; }
 
         /// <summary>
+        /// Gets or Sets the current Settings
+        /// </summary>
+        public HydraSettings Settings = new HydraSettings();
+
+        /// <summary>
         /// Gets or Sets the loaded Assets
         /// </summary>
         public List<GameAsset> Assets { get; set; }
@@ -151,6 +156,35 @@ namespace HydraX.Library
             }
         }
 
+        public void LoadGDTs()
+        {
+            try
+            {
+                if (Game != null)
+                {
+                    if (Settings["OverwriteGDT", "true"] == "false")
+                    {
+                        string outputFolder = Path.Combine("exported_files", Game.Name, "source_data", "hydrax_gdts");
+
+                        foreach (var gdt in GDTs)
+                        {
+                            var gdtPath = Path.Combine(outputFolder, gdt.Key.ToLower() + "_assets.gdt");
+
+                            if (File.Exists(gdtPath))
+                            {
+                                gdt.Value.Assets.Clear();
+                                gdt.Value.Assets = new GameDataTable(gdtPath).Assets;
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                return;
+            }
+        }
+
         public void Clear()
         {
             Game = null;
@@ -192,9 +226,15 @@ namespace HydraX.Library
                                 Game.AssetPools = GetAssetPools(Game);
 
                                 Assets = new List<GameAsset>();
-                                
-                                foreach(var assetPool in Game.AssetPools)
-                                    Assets.AddRange(assetPool.Load(this));
+                                Console.WriteLine("| {0} | {1} |", "Asset Type".PadRight(24), "Settings Group".PadRight(24));
+                                foreach (var assetPool in Game.AssetPools)
+                                {
+                                    if (Settings[assetPool.SettingGroup, "true"] == "true")
+                                    {
+                                        Console.WriteLine("| {0} | {1} |", assetPool.Name.PadRight(24), assetPool.SettingGroup.PadRight(24));
+                                        Assets.AddRange(assetPool.Load(this));
+                                    }
+                                }
 
                                 status = HydraStatus.Success;
                             }

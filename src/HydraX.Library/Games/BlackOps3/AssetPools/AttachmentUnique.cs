@@ -729,7 +729,7 @@ namespace HydraX.Library
             /// <summary>
             /// Gets the Setting Group for this Pool
             /// </summary>
-            public string SettingGroup => "Weapon";
+            public string SettingGroup => "Attachment";
 
             /// <summary>
             /// Gets the Index of this Pool

@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Export Complete" Height="142.728" Width="307.728" WindowStartupLocation="CenterOwner"
+        Title="HydraX | Export Complete" Height="142.728" Width="307.728" WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize" WindowStyle="ToolWindow">
     <Grid Background="#FF1B1B1B">
         <Label Content="Export Complete" Margin="10,10,10,0" Background="{x:Null}" Foreground="White" FontSize="18" Height="37" VerticalAlignment="Top"/>

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace HydraX.Library
 {
-    public class Settings
+    public class HydraSettings
     {
         /// <summary>
         /// Setting Values
@@ -39,13 +39,13 @@ namespace HydraX.Library
         /// <summary>
         /// Initializes an instance of the Settings Class
         /// </summary>
-        public Settings() { }
+        public HydraSettings() { }
 
         /// <summary>
         /// Initializes an instance of the Settings Class and loads the settings
         /// </summary>
         /// <param name="fileName">File Name</param>
-        public Settings(string fileName)
+        public HydraSettings(string fileName)
         {
             Load(fileName);
         }

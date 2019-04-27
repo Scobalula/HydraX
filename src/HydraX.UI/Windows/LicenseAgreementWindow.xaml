@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Title="HydraX" Width="848.5" Height="555.5" MinWidth="640" MinHeight="360">
+        Title="HydraX | EULA" Width="848.5" Height="555.5" MinWidth="640" MinHeight="360">
     <Grid Background="#FF252525">
         <Label Content="HydraX End User License Agreement" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Margin="10,10,10,0" VerticalAlignment="Top" Height="60" FontSize="24" FontFamily="Calibri" FontWeight="Bold" Foreground="White"/>
         <RichTextBox x:Name="LicenseBox" IsReadOnly="True" HorizontalContentAlignment="Center" VerticalScrollBarVisibility="Visible" Margin="10,70,10,43" BorderBrush="#FF666666" Foreground="White" Background="#FF2E2E2E">

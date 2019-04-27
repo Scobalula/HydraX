@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HydraX"
         mc:Ignorable="d"
-        Title="About HydraX" Height="170.5" Width="400" WindowStartupLocation="CenterOwner"
+        Title="HydraX | About" Height="170.5" Width="400" WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize" WindowStyle="ToolWindow">
     <Grid Background="#FF1B1B1B">
         <Label Content="HydraX - Black Ops III Asset Decompiler" HorizontalAlignment="Left" Margin="105,10,0,0" VerticalAlignment="Top" Height="27" Width="279" Background="{x:Null}" Foreground="White"/>

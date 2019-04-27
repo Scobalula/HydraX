@@ -36,6 +36,7 @@
         <Button Content="Export All" Click="ExportAllClick"  HorizontalAlignment="Left" Margin="276,0,0,10" VerticalAlignment="Bottom" Width="100" Height="28" ToolTip="Exports all listed assets."/>
         <Button Content="Clear" Click="ClearAssetsClick"  HorizontalAlignment="Left" Margin="381,0,0,10" VerticalAlignment="Bottom" Width="96" Height="28" ToolTip="Clears loaded assets."/>
         <!-- Dim Box for when dialogs are active -->
+        <Button Content="Settings" Click="SettingsClick"  HorizontalAlignment="Right" Margin="0,10,113,0" VerticalAlignment="Top" Width="98" Height="28" ToolTip="Opens the Settings Window."/>
         <Rectangle x:Name="DimBox" Fill="#82000000" Visibility="Hidden"/>
     </Grid>
 </Window>

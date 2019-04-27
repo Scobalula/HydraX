@@ -34,11 +34,6 @@ namespace HydraX
         private HydraInstance Instance = new HydraInstance();
 
         /// <summary>
-        /// Gets or Sets the Active Settings
-        /// </summary>
-        private Settings ActiveSettings = new Settings("Settings.hcfg");
-
-        /// <summary>
         /// Active Log
         /// </summary>
         private HydraLogger ActiveLogger = new HydraLogger("HydraX", "HydraLog.txt");
@@ -53,24 +48,26 @@ namespace HydraX
         /// </summary>
         public MainWindow()
         {
-            if(ActiveSettings["EulaWindowShown", "false"] == "false")
+            Instance.Settings.Load("Settings.hcfg");
+
+            if(Instance.Settings["EulaWindowShown", "false"] == "false")
             {
                 var eulaWindow = new LicenseAgreementWindow();
                 eulaWindow.ShowDialog();
 
                 if (eulaWindow.HasAccepted)
                 {
-                    ActiveSettings["EulaWindowShown"] = "true";
+                    Instance.Settings["EulaWindowShown"] = "true";
                 }
                 else
                 {
                     Close();
                 }
 
-                ActiveSettings.Save("Settings.hcfg");
+                Instance.Settings.Save("Settings.hcfg");
             }
 
-            if(ActiveSettings["AutoUpdates", "false"] == "true")
+            if(Instance.Settings["AutoUpdates", "false"] == "true")
             {
                 new Thread(() =>
                 {
@@ -165,7 +162,7 @@ namespace HydraX
 
         private void WindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            ActiveSettings.Save("Settings.hcfg");
+            Instance.Settings.Save("Settings.hcfg");
         }
 
         private void SetDimmer(Visibility visibility)
@@ -244,7 +241,7 @@ namespace HydraX
             var progressWindow = new ProgressWindow()
             {
                 Owner = this,
-                Title = "Working"
+                Title = "HydraX | Working"
             };
 
             Dispatcher.BeginInvoke(new Action(() => progressWindow.ShowDialog()));
@@ -254,6 +251,8 @@ namespace HydraX
             {
 
                 SetDimmer(Visibility.Visible);
+
+                Instance.LoadGDTs();
 
                 Parallel.ForEach(assets, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, (asset, loop) =>
                 {
@@ -296,6 +295,43 @@ namespace HydraX
                     SetDimmer(Visibility.Hidden);
                 }));
             }).Start();
+        }
+
+        private void SettingsClick(object sender, RoutedEventArgs e)
+        {
+            SetDimmer(Visibility.Visible);
+            var settingsWindow = new SettingsWindow()
+            {
+                Owner = this
+            };
+
+            settingsWindow.ShowAI.IsChecked            = Instance.Settings["AI", "true"] == "true";
+            settingsWindow.ShowAttachment.IsChecked    = Instance.Settings["Attachment", "true"] == "true";
+            settingsWindow.ShowMisc.IsChecked          = Instance.Settings["Misc", "true"] == "true";
+            settingsWindow.ShowMetaData.IsChecked      = Instance.Settings["Meta Data", "true"] == "true";
+            settingsWindow.ShowPhysics.IsChecked       = Instance.Settings["Physics", "true"] == "true";
+            settingsWindow.ShowRawFile.IsChecked       = Instance.Settings["Raw File", "true"] == "true";
+            settingsWindow.ShowSound.IsChecked         = Instance.Settings["Sound", "true"] == "true";
+            settingsWindow.ShowScriptBundle.IsChecked  = Instance.Settings["Script Bundle", "true"] == "true";
+            settingsWindow.ShowWeapon.IsChecked        = Instance.Settings["Weapon", "true"] == "true";
+            settingsWindow.AutoUpdates.IsChecked       = Instance.Settings["AutoUpdates", "true"] == "true";
+            settingsWindow.OverwriteGDT.IsChecked      = Instance.Settings["OverwriteGDT", "true"] == "true";
+
+            settingsWindow.ShowDialog();
+
+            Instance.Settings["AI"]            = settingsWindow.ShowAI.IsChecked.ToString().ToLower();
+            Instance.Settings["Attachment"]    = settingsWindow.ShowAttachment.IsChecked.ToString().ToLower();
+            Instance.Settings["Misc"]          = settingsWindow.ShowMisc.IsChecked.ToString().ToLower();
+            Instance.Settings["Meta Data"]     = settingsWindow.ShowMetaData.IsChecked.ToString().ToLower();
+            Instance.Settings["Physics"]       = settingsWindow.ShowPhysics.IsChecked.ToString().ToLower();
+            Instance.Settings["Raw File"]      = settingsWindow.ShowRawFile.IsChecked.ToString().ToLower();
+            Instance.Settings["Sound"]         = settingsWindow.ShowSound.IsChecked.ToString().ToLower();
+            Instance.Settings["Script Bundle"] = settingsWindow.ShowScriptBundle.IsChecked.ToString().ToLower();
+            Instance.Settings["Weapon"]        = settingsWindow.ShowWeapon.IsChecked.ToString().ToLower();
+            Instance.Settings["AutoUpdates"]   = settingsWindow.AutoUpdates.IsChecked.ToString().ToLower();
+            Instance.Settings["OverwriteGDT"]  = settingsWindow.OverwriteGDT.IsChecked.ToString().ToLower();
+
+            SetDimmer(Visibility.Hidden);
         }
     }
 }

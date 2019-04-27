@@ -59,7 +59,7 @@ namespace HydraX.Library
             /// <summary>
             /// Gets the Setting Group for this Pool
             /// </summary>
-            public string SettingGroup => "Misc";
+            public string SettingGroup => "Raw File";
 
             /// <summary>
             /// Gets the Index of this Pool
@@ -100,6 +100,24 @@ namespace HydraX.Library
             }
 
             /// <summary>
+            /// Decompresses a deflate compressed animation tree
+            /// </summary>
+            /// <param name="input"></param>
+            /// <returns></returns>
+            private static byte[] DecompressAnimTree(byte[] input)
+            {
+                using (var compressedStream = new MemoryStream(input))
+                {
+                    using (var decompressedStream = new MemoryStream())
+                    {
+                        using (var deflater = new System.IO.Compression.DeflateStream(compressedStream, System.IO.Compression.CompressionMode.Decompress))
+                            deflater.CopyTo(decompressedStream);
+                        return decompressedStream.ToArray();
+                    }
+                }
+            }
+
+            /// <summary>
             /// Exports the given asset from this pool
             /// </summary>
             public HydraStatus Export(GameAsset asset, HydraInstance instance)
@@ -113,10 +131,10 @@ namespace HydraX.Library
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
                 byte[] buffer;
-                //// Check for animation trees, as they are compressed using Deflate
-                //if (Path.GetExtension(path) == ".atr")
-                //    buffer = Deflate.Decompress(Hydra.ActiveGameReader.ReadBytes(rawFile.DataPointer + 4, (int)rawFile.Size - 4));
-                //else
+                // Check for animation trees, as they are compressed using Deflate
+                if (Path.GetExtension(path) == ".atr")
+                    buffer = DecompressAnimTree(instance.Reader.ReadBytes(header.DataPointer + 4, (int)header.Size - 4));
+                else
                     buffer = instance.Reader.ReadBytes(header.DataPointer, (int)header.Size);
 
                 File.WriteAllBytes(path, buffer);

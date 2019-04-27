@@ -54,6 +54,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -71,6 +72,9 @@
     <Compile Include="CommonStructures\Vector2.cs" />
     <Compile Include="CommonStructures\Vector3.cs" />
     <Compile Include="CommonStructures\Vector4.cs" />
+    <Compile Include="Games\BlackOps3\AssetPools\CustomizationTable.cs" />
+    <Compile Include="Games\BlackOps3\AssetPools\ImpactFX.cs" />
+    <Compile Include="Games\BlackOps3\AssetPools\TTF.cs" />
     <Compile Include="Utility\GameAsset.cs" />
     <Compile Include="Utility\GameDataTable.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\AnimationSelectorTable.cs" />
@@ -103,7 +107,7 @@
     <Compile Include="Games\BlackOps3\BlackOps3.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\StringTable.cs" />
-    <Compile Include="Utility\Settings.cs" />
+    <Compile Include="Utility\HydraSettings.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\PhilLibX\src\PhilLibX\PhilLibX\PhilLibX.csproj">

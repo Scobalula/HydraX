@@ -133,7 +133,7 @@ namespace HydraX.Library
             /// <summary>
             /// Gets the Setting Group for this Pool
             /// </summary>
-            public string SettingGroup => "AI Files";
+            public string SettingGroup => "AI";
 
             /// <summary>
             /// Gets the Index of this Pool
@@ -183,7 +183,7 @@ namespace HydraX.Library
                 if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
                     return HydraStatus.MemoryChanged;
 
-                string path = Path.Combine("exported_files", instance.Game.Name, instance.AnimationTableFolder, asset.Name);
+                string path = Path.Combine(instance.AnimationTableFolder, asset.Name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
                 var selectors = instance.Reader.ReadArray<AnimationSelector>(header.SelectorsPointer, header.SelectorCount);

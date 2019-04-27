@@ -119,7 +119,7 @@ namespace HydraX.Library
             /// <summary>
             /// Gets the Setting Group for this Pool
             /// </summary>
-            public string SettingGroup => "AI Files";
+            public string SettingGroup => "AI";
 
             /// <summary>
             /// Gets the Index of this Pool

@@ -10,6 +10,25 @@ namespace HydraX.Library
 {
     public partial class BlackOps3 : IGame
     {
+        #region Enums
+        /// <summary>
+        /// Data Block Data Types
+        /// </summary>
+        public enum DataTypes : int
+        {
+            Image            = 0xF,
+            Anim             = 0x3,
+            PlayerAnim       = 0x4,
+            XCam             = 0xD,
+            XModel           = 0x6,
+            XString          = 0x0,
+            FX               = 0x9,
+            Int              = 0x1,
+            Float            = 0x2,
+            Bool,
+        }
+        #endregion
+
         #region Structures
         /// <summary>
         /// Asset Pool Data
@@ -30,7 +49,7 @@ namespace HydraX.Library
         {
             public int DataNameStringIndex { get; set; }
             public int DataStringIndex { get; set; }
-            public int DataType { get; set; }
+            public DataTypes DataType { get; set; }
             public int Data { get; set; }
             public long DataPointer { get; set; }
         }
@@ -309,7 +328,6 @@ namespace HydraX.Library
             "specialty_whoswho",
             "specialty_widowswine",
             "specialty_locdamagecountsasheadshot",
-            "",
         };
 
         /// <summary>
