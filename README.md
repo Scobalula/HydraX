@@ -4,31 +4,49 @@ HydraX is an asset decompiler for Call of Duty: Black Ops 3 I have been working 
 
 HydraX can decompile/export the following asset types:
 
-| Asset Type               | Settings Group           |
-|--------------------------|--------------------------|
-| impactsfxtable           | Misc                     |
-| ttf                      | Raw File                 |
-| animselectortable        | AI                       |
-| behaviorstatemachine     | AI                       |
-| physpreset               | Physics                  |
-| physconstraints          | Physics                  |
-| rumble                   | Physics                  |
-| weaponcamo               | Weapon                   |
-| zbarrier                 | Misc                     |
-| behaviortree             | AI                       |
-| structuredtable          | Meta Data                |
-| animstatemachine         | AI                       |
-| attachment               | Attachment               |
-| animmappingtable         | AI                       |
-| sound                    | Sound                    |
-| vehicle                  | Misc                     |
-| rawfile                  | Raw File                 |
-| scriptparsetree          | Raw File                 |
-| scriptbundle             | Script Bundle            |
-| attachmentunique         | Attachment               |
-| beam                     | Misc                     |
-| weapon                   | Weapon                   |
-| stringtable              | Meta Data                |
+| Asset Type                       | Settings Group                   |
+| attachmentcosmeticvariant        | Weapon                           |
+| footsteptable                    | Misc                             |
+| playersoundstable                | Misc                             |
+| sharedweaponsounds               | Misc                             |
+| playerfxtable                    | Misc                             |
+| xmodelalias                      | Misc                             |
+| impactsoundstable                | Misc                             |
+| impactsfxtable                   | Misc                             |
+| entityfximpacts                  | Misc                             |
+| entityfximpacts                  | Misc                             |
+| surfacefxtable                   | Misc                             |
+| surfacesounddef                  | Misc                             |
+| tracer                           | Weapon                           |
+| laser                            | Misc                             |
+| flametable                       | Weapon                           |
+| customizationtable               | Misc                             |
+| shellshock                       | Physics                          |
+| ttf                              | Raw File                         |
+| aitype                           | AI                               |
+| vehiclesounddef                  | Misc                             |
+| vehiclefxdef                     | Misc                             |
+| animselectortable                | AI                               |
+| behaviorstatemachine             | AI                               |
+| physpreset                       | Physics                          |
+| physconstraints                  | Physics                          |
+| rumble                           | Physics                          |
+| weaponcamo                       | Weapon                           |
+| zbarrier                         | Misc                             |
+| behaviortree                     | AI                               |
+| structuredtable                  | Meta Data                        |
+| animstatemachine                 | AI                               |
+| attachment                       | Attachment                       |
+| animmappingtable                 | AI                               |
+| sound                            | Sound                            |
+| vehicle                          | Misc                             |
+| rawfile                          | Raw File                         |
+| scriptparsetree                  | Raw File                         |
+| scriptbundle                     | Script Bundle                    |
+| attachmentunique                 | Weapon                           |
+| beam                             | Misc                             |
+| weapon                           | Weapon                           |
+| stringtable                      | Meta Data                        |
 
 For assets that are exported to GDTs, Hydra will bundle them into different GDTs in the source_data folder of the export directory.
 
