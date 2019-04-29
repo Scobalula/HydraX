@@ -146,7 +146,7 @@ namespace HydraX.Library
                 rumbleAsset["lowrumblefile"]       = WriteRumbleFile(header.LowRumbleFilePointer, instance);
                 rumbleAsset["highrumblefile"]      = WriteRumbleFile(header.HighRumbleFilePointer, instance);
 
-                instance.GDTs["Misc"][rumbleAsset.Name] = rumbleAsset;
+                instance.GDTs["Physic"][rumbleAsset.Name] = rumbleAsset;
 
                 return HydraStatus.Success;
             }

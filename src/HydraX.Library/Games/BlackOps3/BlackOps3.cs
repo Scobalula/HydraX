@@ -56,6 +56,11 @@ namespace HydraX.Library
         #endregion
 
         /// <summary>
+        /// Alias Hashes and Names
+        /// </summary>
+        public static Dictionary<uint, string> AliasHashes = new Dictionary<uint, string>();
+
+        /// <summary>
         /// Gets Black Ops 3's Game Name
         /// </summary>
         public string Name => "Black Ops III";
@@ -329,6 +334,16 @@ namespace HydraX.Library
             "specialty_widowswine",
             "specialty_locdamagecountsasheadshot",
         };
+
+        /// <summary>
+        /// Gets an Alias Name by Hash, if not found, returns the hash as a hex string
+        /// </summary>
+        /// <param name="hash"></param>
+        /// <returns></returns>
+        public static string GetAliasByHash(uint hash)
+        {
+            return AliasHashes.TryGetValue(hash, out var alias) ? alias : hash.ToString("x");
+        }
 
         /// <summary>
         /// Struct Sizes to check against

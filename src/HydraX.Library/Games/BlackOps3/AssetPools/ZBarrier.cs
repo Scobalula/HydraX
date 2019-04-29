@@ -158,10 +158,10 @@ namespace HydraX.Library
 
                 var zbarrierAsset = new GameDataTable.Asset(asset.Name, "zbarrier");
 
-                zbarrierAsset["generalRepairSound0"]             = Sound.GetAliasByHash(header.GeneralRepairSoundHash);
-                zbarrierAsset["generalRepairSound1"]             = Sound.GetAliasByHash(header.SecondGeneralRepairSoundHash);
-                zbarrierAsset["upgradedGeneralRepairSound0"]     = Sound.GetAliasByHash(header.UpgradedGeneralRepairSoundHash);
-                zbarrierAsset["upgradedGeneralRepairSound1"]     = Sound.GetAliasByHash(header.SecondUpgradedGeneralRepairSoundHash);
+                zbarrierAsset["generalRepairSound0"]             = GetAliasByHash(header.GeneralRepairSoundHash);
+                zbarrierAsset["generalRepairSound1"]             = GetAliasByHash(header.SecondGeneralRepairSoundHash);
+                zbarrierAsset["upgradedGeneralRepairSound0"]     = GetAliasByHash(header.UpgradedGeneralRepairSoundHash);
+                zbarrierAsset["upgradedGeneralRepairSound1"]     = GetAliasByHash(header.SecondUpgradedGeneralRepairSoundHash);
                 zbarrierAsset["useDelayBetweenGeneralRepSounds"] = header.DelayBetweenSounds.ToString();
                 zbarrierAsset["delayBetweenGeneralRepSounds"]    = header.Delay.ToString();
                 zbarrierAsset["earthquakeOnRepair"]              = header.EarthquakeOnRepair.ToString();
@@ -187,8 +187,8 @@ namespace HydraX.Library
                     zbarrierAsset[string.Format("alternateBoardModel{0}", i + 1)]            = instance.Game.GetAssetName(header.Pieces[i].AlternatePieceModelPointer, instance);
                     zbarrierAsset[string.Format("boardAnim{0}", i + 1)]                      = instance.Reader.ReadNullTerminatedString(header.Pieces[i].ClosingAnimNamePointer);
                     zbarrierAsset[string.Format("tearAnim{0}", i + 1)]                       = instance.Reader.ReadNullTerminatedString(header.Pieces[i].OpeningAnimNamePointer);
-                    zbarrierAsset[string.Format("boardRepairSound{0}", i + 1)]               = Sound.GetAliasByHash(header.Pieces[i].BoardClosingSoundHash);
-                    zbarrierAsset[string.Format("boardRepairHoverSound{0}", i + 1)]          = Sound.GetAliasByHash(header.Pieces[i].BoardClosingHoverSoundHash);
+                    zbarrierAsset[string.Format("boardRepairSound{0}", i + 1)]               = GetAliasByHash(header.Pieces[i].BoardClosingSoundHash);
+                    zbarrierAsset[string.Format("boardRepairHoverSound{0}", i + 1)]          = GetAliasByHash(header.Pieces[i].BoardClosingHoverSoundHash);
                     zbarrierAsset[string.Format("repairFx{0}0", i + 1)]                      = instance.Game.CleanAssetName(HydraAssetType.FX, instance.Game.GetAssetName(header.Pieces[i].FirstClosingFXPointer, instance));
                     zbarrierAsset[string.Format("repairFx{0}1", i + 1)]                      = instance.Game.CleanAssetName(HydraAssetType.FX, instance.Game.GetAssetName(header.Pieces[i].SecondClosingFXPointer, instance));
                     zbarrierAsset[string.Format("OffsetRepairFxX{0}0", i + 1)]               = header.Pieces[i].FirstClosingFXOffset.X.ToString();

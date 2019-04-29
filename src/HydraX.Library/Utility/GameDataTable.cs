@@ -406,7 +406,6 @@ namespace HydraX.Library
                     case 0x11:
                     case 0x16:
                     case 0x17:
-                    case 0x18:
                     case 0x1E:
                     case 0x2F:
                     case 0x22:
@@ -418,6 +417,11 @@ namespace HydraX.Library
                             if (property.Item3 == 0xA)
                                 assetName = instance.Game.CleanAssetName(HydraAssetType.FX, assetName);
                             asset[property.Item1] = assetName;
+                            break;
+                        }
+                    case 0x18:
+                        {
+                            asset[property.Item1] = BlackOps3.GetAliasByHash(BitConverter.ToUInt32(assetBuffer, property.Item2));
                             break;
                         }
                     default:

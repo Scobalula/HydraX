@@ -134,7 +134,7 @@ namespace HydraX.Library
 
                 result.Type = "physpreset";
 
-                instance.GDTs["Misc"][asset.Name] = result;
+                instance.GDTs["Physic"][asset.Name] = result;
 
                 return HydraStatus.Success;
             }

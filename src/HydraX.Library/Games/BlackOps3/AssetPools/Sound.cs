@@ -858,11 +858,6 @@ namespace HydraX.Library
                 "BUS_MOVIE",
                 "BUS_REFERENCE",
             };
-
-            /// <summary>
-            /// Alias Hashes and Names
-            /// </summary>
-            public static Dictionary<uint, string> AliasHashes = new Dictionary<uint, string>();
             #endregion
 
             #region HelperMethods
@@ -894,16 +889,6 @@ namespace HydraX.Library
             public static double Calculate100Value(float input)
             {
                 return input > 0 ? Math.Round((Math.Log(input, 10.0) / 0.05) + 100.0, 2) : 0;
-            }
-
-            /// <summary>
-            /// Gets an Alias Name by Hash, if not found, returns the hash as a hex string
-            /// </summary>
-            /// <param name="hash"></param>
-            /// <returns></returns>
-            public static string GetAliasByHash(uint hash)
-            {
-                return AliasHashes.TryGetValue(hash, out var alias) ? alias : hash.ToString("x");
             }
             #endregion
 

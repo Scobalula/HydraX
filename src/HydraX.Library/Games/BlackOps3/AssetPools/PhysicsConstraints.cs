@@ -202,7 +202,7 @@ namespace HydraX.Library
 
                 result.Type = "physconstraints";
 
-                instance.GDTs["Misc"][asset.Name] = result;
+                instance.GDTs["Physic"][asset.Name] = result;
 
                 return HydraStatus.Success;
             }

@@ -56,7 +56,7 @@ namespace HydraX.Library
         /// Gets the Export Path
         /// </summary>
         public string ExportFolder { get { return Path.Combine("exported_files", Game.Name); } }
-        
+
         /// <summary>
         /// Gets the Sound Path
         /// </summary>
@@ -98,7 +98,7 @@ namespace HydraX.Library
             var games = AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where(p => gameType.IsAssignableFrom(p));
 
             foreach (var game in games)
-                if(!game.IsInterface)
+                if (!game.IsInterface)
                     Games.Add((IGame)Activator.CreateInstance(game));
         }
 
@@ -132,7 +132,7 @@ namespace HydraX.Library
 
             var pools = AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where(p => poolType.IsAssignableFrom(p));
 
-            foreach(var pool in pools)
+            foreach (var pool in pools)
                 if (!pool.IsInterface)
                     if (pool.DeclaringType is Type gameType)
                         if (gameType == game.GetType())
@@ -143,7 +143,7 @@ namespace HydraX.Library
 
         public void FlushGDTs()
         {
-            if(Game != null)
+            if (Game != null)
             {
                 string outputFolder = Path.Combine("exported_files", Game.Name, "source_data", "hydrax_gdts");
                 Directory.CreateDirectory(outputFolder);
@@ -213,25 +213,26 @@ namespace HydraX.Library
             {
                 foreach (var game in Games)
                 {
-                    for(int i = 0; i < game.ProcessNames.Length; i++)
+                    for (int i = 0; i < game.ProcessNames.Length; i++)
                     {
-                        if(process.ProcessName == game.ProcessNames[i])
+                        if (process.ProcessName == game.ProcessNames[i])
                         {
                             Game = (IGame)game.Clone();
                             Game.ProcessIndex = i;
                             Reader = new ProcessReader(process);
 
-                            if(Game.ValidateAddresses(this))
+                            if (Game.ValidateAddresses(this))
                             {
                                 Game.AssetPools = GetAssetPools(Game);
 
                                 Assets = new List<GameAsset>();
-                                Console.WriteLine("| {0} | {1} |", "Asset Type".PadRight(24), "Settings Group".PadRight(24));
+                                // For printing a new support table for the README.md
+                                // Console.WriteLine("| {0} | {1} |", "Asset Type".PadRight(32), "Settings Group".PadRight(32));
                                 foreach (var assetPool in Game.AssetPools)
                                 {
                                     if (Settings[assetPool.SettingGroup, "true"] == "true")
                                     {
-                                        Console.WriteLine("| {0} | {1} |", assetPool.Name.PadRight(24), assetPool.SettingGroup.PadRight(24));
+                                        // Console.WriteLine("| {0} | {1} |", assetPool.Name.PadRight(32), assetPool.SettingGroup.PadRight(32));
                                         Assets.AddRange(assetPool.Load(this));
                                     }
                                 }
