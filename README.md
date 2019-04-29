@@ -5,6 +5,7 @@ HydraX is an asset decompiler for Call of Duty: Black Ops 3 I have been working 
 HydraX can decompile/export the following asset types:
 
 | Asset Type                       | Settings Group                   |
+|----------------------------------|----------------------------------|
 | attachmentcosmeticvariant        | Weapon                           |
 | footsteptable                    | Misc                             |
 | playersoundstable                | Misc                             |
