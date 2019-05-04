@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HydraX.Library
 {
@@ -19,6 +17,7 @@ namespace HydraX.Library
         /// </summary>
         public Dictionary<string, GameDataTable> GDTs = new Dictionary<string, GameDataTable>()
         {
+            { "AI",                 new GameDataTable() },
             { "Character",          new GameDataTable() },
             { "Misc",               new GameDataTable() },
             { "XCams",              new GameDataTable() },

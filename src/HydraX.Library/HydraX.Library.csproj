@@ -69,9 +69,12 @@
     <Compile Include="AssetContainers\BehaviorTreeObj.cs" />
     <Compile Include="AssetContainers\MusicSetObj.cs" />
     <Compile Include="AssetContainers\SoundSourceObj.cs" />
+    <Compile Include="AssetContainers\XCamObj.cs" />
     <Compile Include="CommonStructures\Vector2.cs" />
     <Compile Include="CommonStructures\Vector3.cs" />
     <Compile Include="CommonStructures\Vector4.cs" />
+    <Compile Include="Games\BlackOps3\AssetPools\Localize.cs" />
+    <Compile Include="Games\BlackOps3\AssetPools\XCam.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\AttachmentCosmeticVariant.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\FootstepTable.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\PlayerSoundsTable.cs" />
@@ -93,6 +96,7 @@
     <Compile Include="Games\BlackOps3\AssetPools\AIType.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\VehicleSoundDef.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\VehicleFXDef.cs" />
+    <Compile Include="Games\BlackOps3\AssetPools\TagFX.cs" />
     <Compile Include="Utility\GameAsset.cs" />
     <Compile Include="Utility\GameDataTable.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\AnimationSelectorTable.cs" />
@@ -126,6 +130,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\StringTable.cs" />
     <Compile Include="Utility\HydraSettings.cs" />
+    <Compile Include="Utility\Matrix.cs" />
+    <Compile Include="Utility\Quaternion.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\PhilLibX\src\PhilLibX\PhilLibX\PhilLibX.csproj">

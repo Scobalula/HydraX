@@ -6,6 +6,8 @@ HydraX can decompile/export the following asset types:
 
 | Asset Type                       | Settings Group                   |
 |----------------------------------|----------------------------------|
+| localize                         | Raw File                         |
+| xcam                             | Misc                             |
 | attachmentcosmeticvariant        | Weapon                           |
 | footsteptable                    | Misc                             |
 | playersoundstable                | Misc                             |
@@ -27,6 +29,7 @@ HydraX can decompile/export the following asset types:
 | aitype                           | AI                               |
 | vehiclesounddef                  | Misc                             |
 | vehiclefxdef                     | Misc                             |
+| tagfx                            | Misc                             |
 | animselectortable                | AI                               |
 | behaviorstatemachine             | AI                               |
 | physpreset                       | Physics                          |

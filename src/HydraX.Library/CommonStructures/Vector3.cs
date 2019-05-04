@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HydraX.Library.CommonStructures
+﻿namespace HydraX.Library.CommonStructures
 {
     public struct Vector3
     {

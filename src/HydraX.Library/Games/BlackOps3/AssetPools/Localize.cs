@@ -5,34 +5,24 @@ using System.Runtime.InteropServices;
 
 namespace HydraX.Library
 {
-    public partial class BlackOps3
+    partial class BlackOps3
     {
         /// <summary>
-        /// Black Ops 3 Animation Mapping Table Logic
+        /// Black Ops 3 Localize Logic
         /// </summary>
-        private class AnimationMappingTable : IAssetPool
+        private class Localize : IAssetPool
         {
             #region AssetStructures
             /// <summary>
-            /// Animation Mapping Table Asset Structure
+            /// Localize Asset Structure
             /// </summary>
-            [StructLayout(LayoutKind.Sequential, Pack = 8)]
-            private struct AnimationMappingTableAsset
+            [StructLayout(LayoutKind.Sequential, Pack = 1)]
+            private struct LocalizeAsset
             {
-                public long NamePointer;
-                public long MapsPointer;
-                public int MapCount;
-            }
-
-            /// <summary>
-            /// Animation Map Structure
-            /// </summary>
-            [StructLayout(LayoutKind.Sequential, Pack = 8)]
-            private struct AnimationMap
-            {
-                public int NameStringIndex;
-                public long AnimationStringIndicesPointer;
-                public int AnimationCount;
+                #region LocalizeProperties
+                public long LocalizePointer;
+                public long ReferencePointer;
+                #endregion
             }
             #endregion
 
@@ -59,17 +49,17 @@ namespace HydraX.Library
             /// <summary>
             /// Gets the Name of this Pool
             /// </summary>
-            public string Name => "animmappingtable";
+            public string Name => "localize";
 
             /// <summary>
             /// Gets the Setting Group for this Pool
             /// </summary>
-            public string SettingGroup => "AI";
+            public string SettingGroup => "Raw File";
 
             /// <summary>
             /// Gets the Index of this Pool
             /// </summary>
-            public int Index => (int)AssetPool.animmappingtable;
+            public int Index => (int)AssetPool.localize;
 
             /// <summary>
             /// Loads Assets from this Asset Pool
@@ -84,22 +74,14 @@ namespace HydraX.Library
                 AssetSize = poolInfo.AssetSize;
                 AssetCount = poolInfo.PoolSize;
 
-                for(int i = 0; i < AssetCount; i++)
+                results.Add(new GameAsset()
                 {
-                    var header = instance.Reader.ReadStruct<AnimationMappingTableAsset>(StartAddress + (i * AssetSize));
-
-                    if (IsNullAsset(header.NamePointer))
-                        continue;
-
-                    results.Add(new GameAsset()
-                    {
-                        Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
-                        HeaderAddress = StartAddress + (i * AssetSize),
-                        AssetPool = this,
-                        Type = Name,
-                        Information = string.Format("Maps: {0}", header.MapCount)
-                    });
-                }
+                    Name = "localizedstrings.str",
+                    HeaderAddress = poolInfo.PoolPointer,
+                    AssetPool = this,
+                    Type = Name,
+                    Information = "N/A"
+                });
 
                 return results;
             }
@@ -109,34 +91,29 @@ namespace HydraX.Library
             /// </summary>
             public HydraStatus Export(GameAsset asset, HydraInstance instance)
             {
-                var header = instance.Reader.ReadStruct<AnimationMappingTableAsset>(asset.HeaderAddress);
-
-                if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
-                    return HydraStatus.FailedToFindGame;
-
-                string path = Path.Combine("exported_files", instance.Game.Name, instance.AnimationTableFolder, asset.Name);
+                string path = Path.Combine(instance.ExportFolder, asset.Name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                var maps = instance.Reader.ReadArray<AnimationMap>(header.MapsPointer, header.MapCount);
-
-                using (StreamWriter writer = new StreamWriter(path))
+                using (var writer = new StreamWriter(path))
                 {
-                    writer.WriteLine("#");
+                    writer.WriteLine("VERSION				\"1\"");
+                    writer.WriteLine("CONFIG				\"C:\\projects\\cod\\t7\\bin\\StringEd.cfg\"");
+                    writer.WriteLine("FILENOTES		    \"Dumped via HydraX by Scobalula\"");
+                    writer.WriteLine();
 
-                    for (int i = 0; i < header.MapCount; i++)
+                    var localizedStrings = instance.Reader.ReadArray<LocalizeAsset>(StartAddress, AssetCount);
+
+                    for(int i = 0; i < localizedStrings.Length; i++)
                     {
-                        writer.Write("{0},", instance.Game.GetString(maps[i].NameStringIndex, instance));
+                        if (IsNullAsset(localizedStrings[i].LocalizePointer))
+                            continue;
 
-                        int[] indicesBuffer = instance.Reader.ReadArray<int>(maps[i].AnimationStringIndicesPointer, maps[i].AnimationCount);
-
-                        for (int j = 0; j < maps[i].AnimationCount; j++)
-                            writer.Write("{0},", instance.Game.GetString(indicesBuffer[j], instance));
-
+                        writer.WriteLine("REFERENCE            {0}", instance.Reader.ReadNullTerminatedString(localizedStrings[i].ReferencePointer));
+                        writer.WriteLine("LANG_ENGLISH         \"{0}\"", instance.Reader.ReadNullTerminatedString(localizedStrings[i].LocalizePointer));
                         writer.WriteLine();
                     }
                 }
 
-                // Done
                 return HydraStatus.Success;
             }
 

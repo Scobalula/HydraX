@@ -1,11 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using PhilLibX;
 
 namespace HydraX.Library
 {
@@ -1975,7 +1969,7 @@ namespace HydraX.Library
             /// </summary>
             private static readonly string[] WeaponADSOverlays =
             {
-               "None",
+               "none",
                "Javelin",
                "Turret Scope",
             };
@@ -2341,9 +2335,9 @@ namespace HydraX.Library
                 {
                     // Check for right hand
                     if ((string)result["viewmodelTag"] == "tag_weapon_right")
-                        result.Type = weaponType == "projectile" ? "projectile" : "bullet" + "weapon";
+                        result.Type = (weaponType == "projectile" ? "projectile" : "bullet") + "weapon";
                     else
-                        result.Type = "dualwield" + weaponType == "projectile" ? "projectile" : "bullet" + "weapon";
+                        result.Type = "dualwield" + (weaponType == "projectile" ? "projectile" : "bullet") + "weapon";
 
                 }
                 // For turrets, check minHorTurnSpeed, it has to be at least 1

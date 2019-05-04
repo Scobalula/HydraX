@@ -1,38 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.InteropServices;
+using HydraX.Library.CommonStructures;
 
 namespace HydraX.Library
 {
     public partial class BlackOps3
     {
         /// <summary>
-        /// Black Ops 3 Animation Mapping Table Logic
+        /// Black Ops 3 TagFX Logic
         /// </summary>
-        private class AnimationMappingTable : IAssetPool
+        private class TagFX : IAssetPool
         {
             #region AssetStructures
             /// <summary>
-            /// Animation Mapping Table Asset Structure
+            /// TagFX Asset Structure
             /// </summary>
             [StructLayout(LayoutKind.Sequential, Pack = 8)]
-            private struct AnimationMappingTableAsset
+            private struct TagFXAsset
             {
+                #region TagFXProperties
                 public long NamePointer;
-                public long MapsPointer;
-                public int MapCount;
+                public int ItemCount;
+                public long ItemsPointer;
+                #endregion
             }
 
             /// <summary>
-            /// Animation Map Structure
+            /// TagFX Item Structure
             /// </summary>
             [StructLayout(LayoutKind.Sequential, Pack = 8)]
-            private struct AnimationMap
+            private struct TagFXItem
             {
-                public int NameStringIndex;
-                public long AnimationStringIndicesPointer;
-                public int AnimationCount;
+                #region TagFXItemProperties
+                public long FXPointer;
+                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 88)]
+                public byte[] Unknown;
+                public int TagNameIndex;
+                public int Delay;
+                public int Bolted;
+                #endregion
             }
             #endregion
 
@@ -59,17 +66,17 @@ namespace HydraX.Library
             /// <summary>
             /// Gets the Name of this Pool
             /// </summary>
-            public string Name => "animmappingtable";
+            public string Name => "tagfx";
 
             /// <summary>
             /// Gets the Setting Group for this Pool
             /// </summary>
-            public string SettingGroup => "AI";
+            public string SettingGroup => "Misc";
 
             /// <summary>
             /// Gets the Index of this Pool
             /// </summary>
-            public int Index => (int)AssetPool.animmappingtable;
+            public int Index => (int)AssetPool.tagfx;
 
             /// <summary>
             /// Loads Assets from this Asset Pool
@@ -86,7 +93,7 @@ namespace HydraX.Library
 
                 for(int i = 0; i < AssetCount; i++)
                 {
-                    var header = instance.Reader.ReadStruct<AnimationMappingTableAsset>(StartAddress + (i * AssetSize));
+                    var header = instance.Reader.ReadStruct<TagFXAsset>(StartAddress + (i * AssetSize));
 
                     if (IsNullAsset(header.NamePointer))
                         continue;
@@ -97,7 +104,7 @@ namespace HydraX.Library
                         HeaderAddress = StartAddress + (i * AssetSize),
                         AssetPool = this,
                         Type = Name,
-                        Information = string.Format("Maps: {0}", header.MapCount)
+                        Information = "N/A"
                     });
                 }
 
@@ -109,34 +116,27 @@ namespace HydraX.Library
             /// </summary>
             public HydraStatus Export(GameAsset asset, HydraInstance instance)
             {
-                var header = instance.Reader.ReadStruct<AnimationMappingTableAsset>(asset.HeaderAddress);
+                var header = instance.Reader.ReadStruct<TagFXAsset>(asset.HeaderAddress);
 
                 if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
-                    return HydraStatus.FailedToFindGame;
+                    return HydraStatus.MemoryChanged;
 
-                string path = Path.Combine("exported_files", instance.Game.Name, instance.AnimationTableFolder, asset.Name);
-                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                var tagFXAsset = new GameDataTable.Asset(asset.Name, "tagfx");
 
-                var maps = instance.Reader.ReadArray<AnimationMap>(header.MapsPointer, header.MapCount);
+                tagFXAsset["tagFXItemCount"] = header.ItemCount;
 
-                using (StreamWriter writer = new StreamWriter(path))
+                var items = instance.Reader.ReadArray<TagFXItem>(header.ItemsPointer, header.ItemCount);
+
+                for(int i = 0; i < items.Length; i++)
                 {
-                    writer.WriteLine("#");
-
-                    for (int i = 0; i < header.MapCount; i++)
-                    {
-                        writer.Write("{0},", instance.Game.GetString(maps[i].NameStringIndex, instance));
-
-                        int[] indicesBuffer = instance.Reader.ReadArray<int>(maps[i].AnimationStringIndicesPointer, maps[i].AnimationCount);
-
-                        for (int j = 0; j < maps[i].AnimationCount; j++)
-                            writer.Write("{0},", instance.Game.GetString(indicesBuffer[j], instance));
-
-                        writer.WriteLine();
-                    }
+                    tagFXAsset["bolted" + (i + 1).ToString()]    = items[i].Bolted;
+                    tagFXAsset["fx" + (i + 1).ToString()]        = instance.Game.CleanAssetName(HydraAssetType.FX, instance.Game.GetAssetName(items[i].FXPointer, instance));
+                    tagFXAsset["timeDelay" + (i + 1).ToString()] = items[i].Delay;
+                    tagFXAsset["tag" + (i + 1).ToString()]       = instance.Game.GetString(items[i].TagNameIndex, instance);
                 }
 
-                // Done
+                instance.GDTs["Misc"][asset.Name] = tagFXAsset;
+
                 return HydraStatus.Success;
             }
 

@@ -388,6 +388,12 @@ namespace HydraX.Library
                             break;
                         }
                     // Asset References
+                    case 0x28:
+                        {
+                            // Pull from the weapon name rather than the asset name
+                            asset[property.Item1] = instance.Game.GetAssetName(BitConverter.ToInt64(assetBuffer, property.Item2), instance, 8);
+                            break;
+                        }
                     case 0xA:
                     case 0xB:
                     case 0xD:
@@ -399,7 +405,6 @@ namespace HydraX.Library
                     case 0x1A:
                     case 0x26:
                     case 0x27:
-                    case 0x28:
                     case 0x2A:
                     case 0x2C:
                     case 0x2D:
@@ -412,6 +417,7 @@ namespace HydraX.Library
                     case 0x23:
                     case 0x2B:
                     case 0x2E:
+                    case 0x20:
                         {
                             var assetName = instance.Game.GetAssetName(BitConverter.ToInt64(assetBuffer, property.Item2), instance, property.Item3 == 0x10 ? 0xF8 : 0);
                             if (property.Item3 == 0xA)
