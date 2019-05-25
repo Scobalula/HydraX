@@ -1262,13 +1262,13 @@ namespace HydraX.Library
                     musicSetNames[i] = musicSets[i].Name;
                 }
 
-                File.WriteAllText(Path.Combine(instance.SoundZoneFolder, asset.Name + ".reverb.sz"), ConvertReverbsToCSVString(instance.Reader.ReadArray<Reverb>(header.ReverbsPointer, header.ReverbCount)));
+                File.WriteAllText(Path.Combine(instance.SoundZoneFolder, asset.Name + ".reverb.csv"), ConvertReverbsToCSVString(instance.Reader.ReadArray<Reverb>(header.ReverbsPointer, header.ReverbCount)));
 
                 var sourceObj = ConvertAliasesToSoundSourceObj(instance.Reader.ReadArray<SoundAlias>(header.AliasesPointer, header.AliasCount), instance);
 
-                sourceObj.Save(Path.Combine(instance.SoundZoneFolder, asset.Name + ".alias.sz"));
+                sourceObj.Save(Path.Combine(instance.SoundZoneFolder, asset.Name + ".alias.csv"));
 
-                using (var output = new StreamWriter(Path.Combine(instance.SoundZoneFolder, asset.Name + ".musiclist.sz")))
+                using (var output = new StreamWriter(Path.Combine(instance.SoundZoneFolder, asset.Name + ".musiclist.csv")))
                 {
                     output.WriteLine("Name");
                     foreach (var musicSetName in musicSetNames)
