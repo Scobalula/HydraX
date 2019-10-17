@@ -308,6 +308,41 @@ namespace HydraX.Library
                 public byte VolumeGroup;
                 #endregion
             }
+
+            /// <summary>
+            /// Sound Alias Entry Structure
+            /// </summary>
+            [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 160)]
+            private struct AmbientEntry
+            {
+                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0x40)]
+                public char[] Name;
+                public uint NameHash;
+                public bool DefaultRoom;
+                public uint ReverbHash;
+                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0x40)]
+                public char[] Reverb;
+                public uint NearVerbHash;
+                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0x40)]
+                public char[] NearVerb;
+                public uint FarVerbHash;
+                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0x40)]
+                public char[] FarVerb;
+                public float ReverbDryLevel;
+                public float ReverbWetLevel;
+                public uint Loop;
+                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0x40)]
+                public char[] Duck;
+                public uint DuckHash;
+                public uint EntityContextType0;
+                public uint EntityContextValue0;
+                public uint EntityContextType1;
+                public uint EntityContextValue1;
+                public uint EntityContextType2;
+                public uint EntityContextValue2;
+                public uint GlobalContextType;
+                public uint GlobalContextValue;
+            }
             #endregion
 
             #region Tables
@@ -938,29 +973,44 @@ namespace HydraX.Library
                 AssetSize = poolInfo.AssetSize;
                 AssetCount = poolInfo.PoolSize;
                 AliasHashes.Clear();
-
-                for(int i = 0; i < AssetCount; i++)
+                using (var writer = new StreamWriter("Aliases.csv"))
                 {
-                    var header = instance.Reader.ReadStruct<SoundAsset>(StartAddress + (i * AssetSize));
-
-                    if (IsNullAsset(header.NamePointer))
-                        continue;
-
-                    var aliases = instance.Reader.ReadArray<SoundAlias>(header.AliasesPointer, header.AliasCount);
-
-                    foreach(var alias in aliases)
-                        AliasHashes[alias.Hash] = instance.Reader.ReadNullTerminatedString(alias.NamePointer);
-
-                    results.Add(new GameAsset()
+                    for (int i = 0; i < AssetCount; i++)
                     {
-                        Name = instance.Reader.ReadNullTerminatedString(header.NamePointer).Split(':')[0],
-                        HeaderAddress = StartAddress + (i * AssetSize),
-                        AssetPool = this,
-                        Type = Name,
-                        Information = string.Format("Aliases: {0}", header.AliasCount)
-                    });
-                }
+                        var header = instance.Reader.ReadStruct<SoundAsset>(StartAddress + (i * AssetSize));
 
+                        if (IsNullAsset(header.NamePointer))
+                            continue;
+
+                        var aliases = instance.Reader.ReadArray<SoundAlias>(header.AliasesPointer, header.AliasCount);
+
+                        foreach (var alias in aliases)
+                        {
+                            AliasHashes[alias.Hash] = instance.Reader.ReadNullTerminatedString(alias.NamePointer);
+
+                            var entries = instance.Reader.ReadArray<SoundAliasEntry>(alias.EntiresPointer, alias.EntryCount);
+
+                            foreach(var entry in entries)
+                            {
+                                if(entry.FileSpec.Hash != 0)
+                                    writer.WriteLine("{0:x},{1}", entry.FileSpec.Hash, instance.Reader.ReadNullTerminatedString(entry.FileSpec.FileNamePointer));
+                                if(entry.FileSpecRelease.Hash != 0)
+                                    writer.WriteLine("{0:x},{1}", entry.FileSpecRelease.Hash, instance.Reader.ReadNullTerminatedString(entry.FileSpecRelease.FileNamePointer));
+                                if(entry.FileSpecSustain.Hash != 0)
+                                writer.WriteLine("{0:x},{1}", entry.FileSpecSustain.Hash, instance.Reader.ReadNullTerminatedString(entry.FileSpecSustain.FileNamePointer));
+                            }
+                        }
+
+                        results.Add(new GameAsset()
+                        {
+                            Name = instance.Reader.ReadNullTerminatedString(header.NamePointer).Split(':')[0],
+                            HeaderAddress = StartAddress + (i * AssetSize),
+                            AssetPool = this,
+                            Type = Name,
+                            Information = string.Format("Aliases: {0}", header.AliasCount)
+                        });
+                    }
+                }
                 return results;
             }
 
@@ -1091,6 +1141,9 @@ namespace HydraX.Library
 
                 foreach (var reverb in reverbs)
                 {
+                    // Add name to hash table
+                    HashedStrings[reverb.Hash] = reverb.Name.ToString().TrimEnd('\0');
+
                     foreach (var property in properties)
                     {
                         switch (property.Name)
@@ -1240,6 +1293,49 @@ namespace HydraX.Library
                 return sourceFile;
             }
 
+
+
+            private static string ConvertAmbientsToCSVString(AmbientEntry[] ambients)
+            {
+                var result = new StringBuilder();
+
+                var properties = typeof(AmbientEntry).GetFields();
+
+                foreach (var property in properties)
+                    if (!property.Name.Contains("Hash"))
+                        result.Append(property.Name + ",");
+                result.AppendLine();
+
+                foreach (var ambient in ambients)
+                {
+                    foreach (var property in properties)
+                    {
+                        if (!property.Name.Contains("Hash"))
+                        {
+                            if (property.FieldType.Name == "Char[]")
+                            {
+                                result.Append(new string((char[])property.GetValue(ambient)).ToString().TrimEnd('\0') + ",");
+                            }
+                            else if (property.FieldType.Name == "UInt32")
+                            {
+                                result.Append(GetHashedString((uint)property.GetValue(ambient)) + ",");
+                            }
+                            else if (property.FieldType.Name == "Boolean")
+                            {
+                                result.Append(((bool)property.GetValue(ambient) == true ? "yes" : "") + ",");
+                            }
+                            else
+                            {
+                                result.Append(property.GetValue(ambient).ToString() + ",");
+                            }
+                        }
+                    }
+                    result.AppendLine();
+                }
+
+                return result.ToString();
+            }
+
             /// <summary>
             /// Exports the given asset from this pool
             /// </summary>
@@ -1249,6 +1345,8 @@ namespace HydraX.Library
 
                 if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer).Split(':')[0])
                     return HydraStatus.MemoryChanged;
+
+                Console.WriteLine(Marshal.SizeOf<AmbientEntry>());
 
                 Directory.CreateDirectory(instance.SoundZoneFolder);
                 Directory.CreateDirectory(instance.SoundMusicFolder);
@@ -1263,6 +1361,7 @@ namespace HydraX.Library
                 }
 
                 File.WriteAllText(Path.Combine(instance.SoundZoneFolder, asset.Name + ".reverb.csv"), ConvertReverbsToCSVString(instance.Reader.ReadArray<Reverb>(header.ReverbsPointer, header.ReverbCount)));
+                File.WriteAllText(Path.Combine(instance.SoundZoneFolder, asset.Name + ".ambient.csv"), ConvertAmbientsToCSVString(instance.Reader.ReadArray<AmbientEntry>(header.UnkPointer, header.UnkCount)));
 
                 var sourceObj = ConvertAliasesToSoundSourceObj(instance.Reader.ReadArray<SoundAlias>(header.AliasesPointer, header.AliasCount), instance);
 

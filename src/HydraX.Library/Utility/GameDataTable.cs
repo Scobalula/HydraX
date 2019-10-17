@@ -415,13 +415,18 @@ namespace HydraX.Library
                     case 0x2F:
                     case 0x22:
                     case 0x23:
-                    case 0x2B:
-                    case 0x2E:
                     case 0x20:
                         {
                             var assetName = instance.Game.GetAssetName(BitConverter.ToInt64(assetBuffer, property.Item2), instance, property.Item3 == 0x10 ? 0xF8 : 0);
                             if (property.Item3 == 0xA)
                                 assetName = instance.Game.CleanAssetName(HydraAssetType.FX, assetName);
+                            asset[property.Item1] = assetName;
+                            break;
+                        }
+                    case 0x2B:
+                    case 0x2E:
+                        {
+                            var assetName = instance.Game.GetAssetName(BitConverter.ToInt64(assetBuffer, property.Item2), instance, 0x1B0);
                             asset[property.Item1] = assetName;
                             break;
                         }

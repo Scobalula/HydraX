@@ -138,28 +138,6 @@ namespace HydraX.Library
                 new Tuple<string, int, int>("flameOnLoopSound",                                              0x208, 0x0),
                 new Tuple<string, int, int>("flameCooldownSound",                                            0x210, 0x0),
             };
-
-            /// <summary>
-            /// AI Species Types
-            /// </summary>
-            private static readonly string[] AISpecies =
-            {
-               "human",
-               "dog",
-               "zombie",
-               "zombie_dog",
-               "robot",
-            };
-
-            /// <summary>
-            /// AI Fire Modes
-            /// </summary>
-            private static readonly string[] AIFireModes =
-            {
-               "fullauto",
-               "burst",
-               "singleshot",
-            };
             #endregion
 
             /// <summary>
@@ -213,9 +191,9 @@ namespace HydraX.Library
                 for(int i = 0; i < AssetCount; i++)
                 {
                     var address = StartAddress + (i * AssetSize);
-                    var namePointer = instance.Reader.ReadInt64(address);
+                    var namePointer = instance.Reader.ReadInt64(address + 0x1B0);
 
-                    if (IsNullAsset(namePointer))
+                    if (IsNullAsset(instance.Reader.ReadInt64(address)))
                         continue;
 
                     results.Add(new GameAsset()
@@ -240,7 +218,7 @@ namespace HydraX.Library
             {
                 var buffer = instance.Reader.ReadBytes(asset.HeaderAddress, asset.Size);
 
-                if (asset.Name != instance.Reader.ReadNullTerminatedString(BitConverter.ToInt64(buffer, 0)))
+                if (asset.Name != instance.Reader.ReadNullTerminatedString(BitConverter.ToInt64(buffer, 0x1B0)))
                     return HydraStatus.MemoryChanged;
 
                 var result = GameDataTable.ConvertStructToGDTAsset(buffer, FlametableOffsets, instance, HandleFlametableSettings);
