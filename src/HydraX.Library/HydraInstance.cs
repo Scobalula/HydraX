@@ -1,4 +1,5 @@
-﻿using PhilLibX.IO;
+﻿using Newtonsoft.Json;
+using PhilLibX.IO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,7 +25,13 @@ namespace HydraX.Library
             { "Table",              new GameDataTable() },
             { "Physic",             new GameDataTable() },
             { "Weapon",             new GameDataTable() },
+            { "Material",           new GameDataTable() },
         };
+
+        /// <summary>
+        /// Material Technique Cache
+        /// </summary>
+        public Dictionary<string, MaterialTechniqueSet> TechniqueSetCache = new Dictionary<string, MaterialTechniqueSet>();
 
         /// <summary>
         /// Gets or Sets the List of Supported Games
@@ -99,6 +106,12 @@ namespace HydraX.Library
             foreach (var game in games)
                 if (!game.IsInterface)
                     Games.Add((IGame)Activator.CreateInstance(game));
+
+            try
+            {
+                TechniqueSetCache = JsonConvert.DeserializeObject<Dictionary<string, MaterialTechniqueSet>>(File.ReadAllText("Data\\TechsetCache.json"));
+            }
+            catch { }
         }
 
         /// <summary>
@@ -161,7 +174,7 @@ namespace HydraX.Library
             {
                 if (Game != null)
                 {
-                    if (Settings["OverwriteGDT", "true"] == "false")
+                    if (Settings["OverwriteGDT", "Yes"] == "No")
                     {
                         string outputFolder = Path.Combine("exported_files", Game.Name, "source_data", "hydrax_gdts");
 
@@ -225,15 +238,25 @@ namespace HydraX.Library
                                 Game.AssetPools = GetAssetPools(Game);
 
                                 Assets = new List<GameAsset>();
+#if DEBUG
                                 // For printing a new support table for the README.md
-                                // Console.WriteLine("| {0} | {1} |", "Asset Type".PadRight(32), "Settings Group".PadRight(32));
+                                Console.WriteLine("| {0} | {1} |", "Asset Type".PadRight(32), "Settings Group".PadRight(32));
+#endif
                                 foreach (var assetPool in Game.AssetPools)
                                 {
-                                    if (Settings[assetPool.SettingGroup, "true"] == "true")
+                                    if (Settings["Show" + assetPool.SettingGroup, "Yes"] == "Yes")
                                     {
-                                        // Console.WriteLine("| {0} | {1} |", assetPool.Name.PadRight(32), assetPool.SettingGroup.PadRight(32));
+#if DEBUG
+                                        Console.WriteLine("| {0} | {1} |", assetPool.Name.PadRight(32), assetPool.SettingGroup.PadRight(32));
+#endif
                                         Assets.AddRange(assetPool.Load(this));
                                     }
+#if DEBUG
+                                    else
+                                    {
+                                        Console.WriteLine("Ignoring Pool: {0}", assetPool.Name);
+                                    }
+#endif
                                 }
 
                                 status = HydraStatus.Success;

@@ -55,7 +55,7 @@ namespace HydraX.Library
             /// <summary>
             /// Gets the Setting Group for this Pool
             /// </summary>
-            public string SettingGroup => "Raw File";
+            public string SettingGroup => "RawFile";
 
             /// <summary>
             /// Gets the Index of this Pool

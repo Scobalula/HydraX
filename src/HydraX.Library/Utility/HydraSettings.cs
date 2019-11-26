@@ -99,9 +99,8 @@ namespace HydraX.Library
                     }
                 }
             }
-            catch (Exception e)
+            catch
             {
-                Console.WriteLine(e);
                 return;
             }
         }

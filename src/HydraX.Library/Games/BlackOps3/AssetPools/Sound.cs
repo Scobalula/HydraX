@@ -312,7 +312,7 @@ namespace HydraX.Library
             /// <summary>
             /// Sound Alias Entry Structure
             /// </summary>
-            [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 160)]
+            [StructLayout(LayoutKind.Sequential, Pack = 1, Size = 388)]
             private struct AmbientEntry
             {
                 [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0x40)]
@@ -973,7 +973,8 @@ namespace HydraX.Library
                 AssetSize = poolInfo.AssetSize;
                 AssetCount = poolInfo.PoolSize;
                 AliasHashes.Clear();
-                using (var writer = new StreamWriter("Aliases.csv"))
+                // For dumping Hashes for SAB
+                // using (var writer = new StreamWriter("Aliases.csv"))
                 {
                     for (int i = 0; i < AssetCount; i++)
                     {
@@ -984,22 +985,23 @@ namespace HydraX.Library
 
                         var aliases = instance.Reader.ReadArray<SoundAlias>(header.AliasesPointer, header.AliasCount);
 
-                        foreach (var alias in aliases)
-                        {
-                            AliasHashes[alias.Hash] = instance.Reader.ReadNullTerminatedString(alias.NamePointer);
+                        // For dumping Hashes for SAB
+                        //foreach (var alias in aliases)
+                        //{
+                        //    AliasHashes[alias.Hash] = instance.Reader.ReadNullTerminatedString(alias.NamePointer);
 
-                            var entries = instance.Reader.ReadArray<SoundAliasEntry>(alias.EntiresPointer, alias.EntryCount);
+                        //    var entries = instance.Reader.ReadArray<SoundAliasEntry>(alias.EntiresPointer, alias.EntryCount);
 
-                            foreach(var entry in entries)
-                            {
-                                if(entry.FileSpec.Hash != 0)
-                                    writer.WriteLine("{0:x},{1}", entry.FileSpec.Hash, instance.Reader.ReadNullTerminatedString(entry.FileSpec.FileNamePointer));
-                                if(entry.FileSpecRelease.Hash != 0)
-                                    writer.WriteLine("{0:x},{1}", entry.FileSpecRelease.Hash, instance.Reader.ReadNullTerminatedString(entry.FileSpecRelease.FileNamePointer));
-                                if(entry.FileSpecSustain.Hash != 0)
-                                writer.WriteLine("{0:x},{1}", entry.FileSpecSustain.Hash, instance.Reader.ReadNullTerminatedString(entry.FileSpecSustain.FileNamePointer));
-                            }
-                        }
+                        //    foreach(var entry in entries)
+                        //    {
+                        //        if(entry.FileSpec.Hash != 0)
+                        //            writer.WriteLine("{0:x},{1}", entry.FileSpec.Hash, instance.Reader.ReadNullTerminatedString(entry.FileSpec.FileNamePointer));
+                        //        if(entry.FileSpecRelease.Hash != 0)
+                        //            writer.WriteLine("{0:x},{1}", entry.FileSpecRelease.Hash, instance.Reader.ReadNullTerminatedString(entry.FileSpecRelease.FileNamePointer));
+                        //        if(entry.FileSpecSustain.Hash != 0)
+                        //        writer.WriteLine("{0:x},{1}", entry.FileSpecSustain.Hash, instance.Reader.ReadNullTerminatedString(entry.FileSpecSustain.FileNamePointer));
+                        //    }
+                        //}
 
                         results.Add(new GameAsset()
                         {
@@ -1345,8 +1347,6 @@ namespace HydraX.Library
 
                 if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer).Split(':')[0])
                     return HydraStatus.MemoryChanged;
-
-                Console.WriteLine(Marshal.SizeOf<AmbientEntry>());
 
                 Directory.CreateDirectory(instance.SoundZoneFolder);
                 Directory.CreateDirectory(instance.SoundMusicFolder);

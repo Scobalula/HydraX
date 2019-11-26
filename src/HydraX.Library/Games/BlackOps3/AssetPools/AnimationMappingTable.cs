@@ -114,7 +114,7 @@ namespace HydraX.Library
                 if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
                     return HydraStatus.FailedToFindGame;
 
-                string path = Path.Combine("exported_files", instance.Game.Name, instance.AnimationTableFolder, asset.Name);
+                string path = Path.Combine(instance.AnimationTableFolder, asset.Name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
                 var maps = instance.Reader.ReadArray<AnimationMap>(header.MapsPointer, header.MapCount);

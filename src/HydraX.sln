@@ -5,9 +5,9 @@ VisualStudioVersion = 15.0.28307.489
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydraX.Library", "HydraX.Library\HydraX.Library.csproj", "{FDD342BD-048F-43A0-A1FE-3F3652A424B5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhilLibX", "..\..\PhilLibX\src\PhilLibX\PhilLibX\PhilLibX.csproj", "{0F468D5B-2F30-42F5-9043-920040D83D9D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhilLibX", "D:\VisualStudio\Projects\PhilLibX\src\PhilLibX\PhilLibX\PhilLibX.csproj", "{0F468D5B-2F30-42F5-9043-920040D83D9D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydraX.UI", "HydraX.UI\HydraX.UI.csproj", "{3E73D23D-7DF1-49B9-B0C2-45BB543982DB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HydraX", "HydraX\HydraX.csproj", "{B22834E4-7272-4955-89D0-0F95857E0AF1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{0F468D5B-2F30-42F5-9043-920040D83D9D}.Debug|x64.Build.0 = Debug|x64
 		{0F468D5B-2F30-42F5-9043-920040D83D9D}.Release|x64.ActiveCfg = Release|x64
 		{0F468D5B-2F30-42F5-9043-920040D83D9D}.Release|x64.Build.0 = Release|x64
-		{3E73D23D-7DF1-49B9-B0C2-45BB543982DB}.Debug|x64.ActiveCfg = Debug|x64
-		{3E73D23D-7DF1-49B9-B0C2-45BB543982DB}.Debug|x64.Build.0 = Debug|x64
-		{3E73D23D-7DF1-49B9-B0C2-45BB543982DB}.Release|x64.ActiveCfg = Release|x64
-		{3E73D23D-7DF1-49B9-B0C2-45BB543982DB}.Release|x64.Build.0 = Release|x64
+		{B22834E4-7272-4955-89D0-0F95857E0AF1}.Debug|x64.ActiveCfg = Debug|x64
+		{B22834E4-7272-4955-89D0-0F95857E0AF1}.Debug|x64.Build.0 = Debug|x64
+		{B22834E4-7272-4955-89D0-0F95857E0AF1}.Release|x64.ActiveCfg = Release|x64
+		{B22834E4-7272-4955-89D0-0F95857E0AF1}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
