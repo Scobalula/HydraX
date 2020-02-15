@@ -74,7 +74,7 @@ namespace HydraX.Library
         /// </summary>
         public long[] AssetPoolsAddresses => new long[]
         {
-            0x93FA290
+            0x94093F0
         };
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace HydraX.Library
         /// </summary>
         public long[] StringTableAddresses => new long[]
         {
-            0x4D4F104
+            0x4D5E280
         };
 
         /// <summary>
@@ -338,6 +338,9 @@ namespace HydraX.Library
         /// <returns></returns>
         public static string GetAliasByHash(uint hash)
         {
+            if (hash == 0)
+                return "";
+
             return AliasHashes.TryGetValue(hash, out var alias) ? alias : hash.ToString("x");
         }
 

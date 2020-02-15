@@ -38,10 +38,10 @@ namespace HydraX.Library
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
             public struct MaterialSettings
             {
-                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
                 public byte[] Padding2; // Always null?
-                public long UnkPointer;
-                public long SettingsPointer;
+                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
+                public long[] BufferPointers; // Note: needs more work, along with below, looks like pixel AND vertex shader settings for the pass
             }
 
             [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -273,7 +273,7 @@ namespace HydraX.Library
                         AssetPool = this,
                         Type = Name,
                         Information = string.Format("Type: {0}", Path.GetFileNameWithoutExtension(instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(header.TechniquePointer)).Split('#')[0]))
-                });
+                    });
                 }
 
                 return results;
@@ -310,124 +310,6 @@ namespace HydraX.Library
                 gdtAsset.Properties.Add("textureAtlasColumnCount", header.FlagsAndSettings[7].ToString());
                 gdtAsset.Properties.Add("usage", "<not in editor>");
 
-                for(int i = 0; i < header.SettingsPointers.Length; i++)
-                {
-                    if (header.SettingsPointers[i].SettingsPointer == 0)
-                        continue;
-
-                    var technique = instance.Reader.ReadStruct<MaterialTechnique>(techset.TechniquePointers[i]);
-                    var pass = instance.Reader.ReadStruct<MaterialTechniquePass>(technique.PassPointer);
-                    var settings = ParseDXBC(instance.Reader.ReadBytes(pass.ShaderPointer, pass.ShaderSize));
-
-                    if (settings == null)
-                        throw new ArgumentException("Failed to find $Globals in DirectX Byte Code RDEF part", "settings");
-
-                    var settingsInfo = instance.Reader.ReadStruct<MaterialSettingBuffer>(header.SettingsPointers[i].SettingsPointer);
-                    var settingsBuffer = instance.Reader.ReadBytes(settingsInfo.BufferPointer, (int)settingsInfo.Size);
-
-                    foreach(var setting in settings)
-                    {
-                        if(set.Settings.TryGetValue(setting.Key, out var gdtInfo))
-                        {
-                            switch (gdtInfo.DataType)
-                            {
-                                case SettingDataType.Boolean:
-                                    {
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[0]] = (int)PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
-                                        break;
-                                    }
-                                case SettingDataType.UInt1:
-                                    {
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[0]] = (uint)PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
-                                        break;
-                                    }
-                                case SettingDataType.UInt2:
-                                    {
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[0]] = (uint)PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[1]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[1]] = (uint)PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 04), gdtInfo.PostProcessor);
-                                        break;
-                                    }
-                                case SettingDataType.UInt3:
-                                    {
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[0]] = (uint)PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[1]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[1]] = (uint)PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 04), gdtInfo.PostProcessor);
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[2]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[1]] = (uint)PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 08), gdtInfo.PostProcessor);
-                                        break;
-                                    }
-                                case SettingDataType.UInt4:
-                                    {
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[0]] = (uint)PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[1]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[1]] = (uint)PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 04), gdtInfo.PostProcessor);
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[2]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[1]] = (uint)PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 08), gdtInfo.PostProcessor);
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[3]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[1]] = (uint)PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 12), gdtInfo.PostProcessor);
-                                        break;
-                                    }
-                                case SettingDataType.Float1:
-                                    {
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[0]] = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
-                                        break;
-                                    }
-                                case SettingDataType.Float2:
-                                    {
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[0]] = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[1]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[1]] = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 04), gdtInfo.PostProcessor);
-                                        break;
-                                    }
-                                case SettingDataType.Float3:
-                                    {
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[0]] = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[1]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[1]] = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 04), gdtInfo.PostProcessor);
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[2]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[1]] = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 08), gdtInfo.PostProcessor);
-                                        break;
-                                    }
-                                case SettingDataType.Float4:
-                                    {
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[0]] = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[1]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[1]] = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 04), gdtInfo.PostProcessor);
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[2]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[1]] = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 08), gdtInfo.PostProcessor);
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[3]))
-                                            gdtAsset[gdtInfo.GDTSlotNames[1]] = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 12), gdtInfo.PostProcessor);
-                                        break;
-                                    }
-                                case SettingDataType.Color:
-                                    {
-                                        if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]))
-                                        {
-                                            var r = MathUtilities.Clamp(PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor), 1.0, 0.0);
-                                            var g = MathUtilities.Clamp(PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 04), gdtInfo.PostProcessor), 1.0, 0.0);
-                                            var b = MathUtilities.Clamp(PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 08), gdtInfo.PostProcessor), 1.0, 0.0);
-                                            var a = MathUtilities.Clamp(PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 12), gdtInfo.PostProcessor), 1.0, 0.0);
-
-                                            gdtAsset[gdtInfo.GDTSlotNames[0]] = string.Format("{0:0.000000} {1:0.000000} {2:0.000000} {3:0.000000}", r, g, b, a);
-                                        }
-                                        break;
-                                    }
-                            }
-                        }
-                    }
-                }
-
-
                 for (int j = 0; j < header.Counts[0]; j++)
                 {
                     var materialImage = instance.Reader.ReadStruct<MaterialImage>(header.ImageTablePointer + (j * 0x20));
@@ -435,10 +317,175 @@ namespace HydraX.Library
                     if (set.ImageSlots.TryGetValue(materialImage.SemanticHash, out string slot))
                     {
                         gdtAsset.Properties[slot] = instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(materialImage.ImagePointer + 0xF8));
+
+                        // Ignore combo, overrides the actual material we're looking for!
+                        if (gdtAsset.Properties[slot].ToString().EndsWith("_combo"))
+                            throw new Exception("Invalid Material. Contains combo image, look for another material with same name!");
                     }
                 }
 
-                instance.GDTs["Misc"][asset.Name] = gdtAsset;
+                for (int i = 0; i < header.SettingsPointers.Length; i++)
+                {
+                    // All pointers are 0, ignore
+                    if (header.SettingsPointers[i].BufferPointers[0] == 0 &&
+                        header.SettingsPointers[i].BufferPointers[1] == 0 &&
+                        header.SettingsPointers[i].BufferPointers[2] == 0 &&
+                        header.SettingsPointers[i].BufferPointers[3] == 0)
+                        continue;
+
+                    var technique = instance.Reader.ReadStruct<MaterialTechnique>(techset.TechniquePointers[i]);
+                    var pass = instance.Reader.ReadStruct<MaterialTechniquePass>(technique.PassPointer);
+                    var settings = ParseDXBC(instance.Reader.ReadBytes(pass.ShaderPointer, pass.ShaderSize));
+
+                    if (settings == null)
+                        continue;
+
+                    foreach(var bufferPointer in header.SettingsPointers[i].BufferPointers)
+                    {
+                        var settingsInfo = instance.Reader.ReadStruct<MaterialSettingBuffer>(bufferPointer);
+                        var settingsBuffer = instance.Reader.ReadBytes(settingsInfo.BufferPointer, (int)settingsInfo.Size);
+
+                        foreach (var setting in settings)
+                        {
+                            // Attempt it, since some techsets mark settings, but then the settings are removed, etc. via .tweak = ""
+
+                            try
+                            {
+                                if (set.Settings.TryGetValue(setting.Key, out var gdtInfo))
+                                {
+                                    // Everything is a float, even bools and ints
+                                    switch (gdtInfo.DataType)
+                                    {
+                                        case SettingDataType.Boolean:
+                                            {
+                                                var value = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
+
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]) || value > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[0]] = (int)value;
+                                                break;
+                                            }
+                                        case SettingDataType.UInt1:
+                                            {
+                                                var value = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
+
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]) || value > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[0]] = (uint)value;
+                                                break;
+                                            }
+                                        case SettingDataType.UInt2:
+                                            {
+                                                var value1 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
+                                                var value2 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 04), gdtInfo.PostProcessor);
+
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]) || value1 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[0]] = (uint)value1;
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[1]) || value2 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[1]] = (uint)value2;
+                                                break;
+                                            }
+                                        case SettingDataType.UInt3:
+                                            {
+                                                var value1 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
+                                                var value2 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 04), gdtInfo.PostProcessor);
+                                                var value3 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 08), gdtInfo.PostProcessor);
+
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]) || value1 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[0]] = (uint)value1;
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[1]) || value2 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[1]] = (uint)value2;
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[2]) || value3 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[2]] = (uint)value3;
+                                                break;
+                                            }
+                                        case SettingDataType.UInt4:
+                                            {
+                                                var value1 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
+                                                var value2 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 04), gdtInfo.PostProcessor);
+                                                var value3 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 08), gdtInfo.PostProcessor);
+                                                var value4 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 12), gdtInfo.PostProcessor);
+
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]) || value1 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[0]] = (uint)value1;
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[1]) || value2 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[1]] = (uint)value2;
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[2]) || value3 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[2]] = (uint)value3;
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[3]) || value4 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[3]] = (uint)value4;
+                                                break;
+                                            }
+                                        case SettingDataType.Float1:
+                                            {
+                                                var value1 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
+
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]) || value1 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[0]] = value1;
+                                                break;
+                                            }
+                                        case SettingDataType.Float2:
+                                            {
+                                                var value1 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
+                                                var value2 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 04), gdtInfo.PostProcessor);
+
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]) || value1 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[0]] = value1;
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[1]) || value2 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[1]] = value2;
+                                                break;
+                                            }
+                                        case SettingDataType.Float3:
+                                            {
+                                                var value1 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
+                                                var value2 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 04), gdtInfo.PostProcessor);
+                                                var value3 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 08), gdtInfo.PostProcessor);
+
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]) || value1 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[0]] = value1;
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[1]) || value2 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[1]] = value2;
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[2]) || value3 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[2]] = value3;
+                                                break;
+                                            }
+                                        case SettingDataType.Float4:
+                                            {
+                                                var value1 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor);
+                                                var value2 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 04), gdtInfo.PostProcessor);
+                                                var value3 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 08), gdtInfo.PostProcessor);
+                                                var value4 = PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 12), gdtInfo.PostProcessor);
+
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]) || value1 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[0]] = value1;
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[1]) || value2 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[1]] = value2;
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[2]) || value3 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[2]] = value3;
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[3]) || value4 > 0)
+                                                    gdtAsset[gdtInfo.GDTSlotNames[3]] = value4;
+                                                break;
+                                            }
+                                        case SettingDataType.Color:
+                                            {
+                                                var r = MathUtilities.Clamp(PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 00), gdtInfo.PostProcessor), 1.0, 0.0);
+                                                var g = MathUtilities.Clamp(PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 04), gdtInfo.PostProcessor), 1.0, 0.0);
+                                                var b = MathUtilities.Clamp(PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 08), gdtInfo.PostProcessor), 1.0, 0.0);
+                                                var a = MathUtilities.Clamp(PerformPostProcess(BitConverter.ToSingle(settingsBuffer, setting.Value + 12), gdtInfo.PostProcessor), 1.0, 0.0);
+
+                                                if (!gdtAsset.Properties.ContainsKey(gdtInfo.GDTSlotNames[0]) || (r > 0 && b > 0 && g > 0 && a > 0))
+                                                {
+                                                    gdtAsset[gdtInfo.GDTSlotNames[0]] = string.Format("{0:0.000000} {1:0.000000} {2:0.000000} {3:0.000000}", r, g, b, a);
+                                                }
+                                                break;
+                                            }
+                                    }
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+                }
+
+                instance.GDTs["Material"][asset.Name] = gdtAsset;
 
                 return HydraStatus.Success;
             }

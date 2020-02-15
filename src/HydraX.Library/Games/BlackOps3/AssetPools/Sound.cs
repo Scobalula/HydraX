@@ -986,22 +986,22 @@ namespace HydraX.Library
                         var aliases = instance.Reader.ReadArray<SoundAlias>(header.AliasesPointer, header.AliasCount);
 
                         // For dumping Hashes for SAB
-                        //foreach (var alias in aliases)
-                        //{
-                        //    AliasHashes[alias.Hash] = instance.Reader.ReadNullTerminatedString(alias.NamePointer);
+                        foreach (var alias in aliases)
+                        {
+                            AliasHashes[alias.Hash] = instance.Reader.ReadNullTerminatedString(alias.NamePointer);
 
-                        //    var entries = instance.Reader.ReadArray<SoundAliasEntry>(alias.EntiresPointer, alias.EntryCount);
+                            //var entries = instance.Reader.ReadArray<SoundAliasEntry>(alias.EntiresPointer, alias.EntryCount);
 
-                        //    foreach(var entry in entries)
-                        //    {
-                        //        if(entry.FileSpec.Hash != 0)
-                        //            writer.WriteLine("{0:x},{1}", entry.FileSpec.Hash, instance.Reader.ReadNullTerminatedString(entry.FileSpec.FileNamePointer));
-                        //        if(entry.FileSpecRelease.Hash != 0)
-                        //            writer.WriteLine("{0:x},{1}", entry.FileSpecRelease.Hash, instance.Reader.ReadNullTerminatedString(entry.FileSpecRelease.FileNamePointer));
-                        //        if(entry.FileSpecSustain.Hash != 0)
-                        //        writer.WriteLine("{0:x},{1}", entry.FileSpecSustain.Hash, instance.Reader.ReadNullTerminatedString(entry.FileSpecSustain.FileNamePointer));
-                        //    }
-                        //}
+                            //foreach (var entry in entries)
+                            //{
+                            //    if (entry.FileSpec.Hash != 0)
+                            //        writer.WriteLine("{0:x},{1}", entry.FileSpec.Hash, instance.Reader.ReadNullTerminatedString(entry.FileSpec.FileNamePointer));
+                            //    if (entry.FileSpecRelease.Hash != 0)
+                            //        writer.WriteLine("{0:x},{1}", entry.FileSpecRelease.Hash, instance.Reader.ReadNullTerminatedString(entry.FileSpecRelease.FileNamePointer));
+                            //    if (entry.FileSpecSustain.Hash != 0)
+                            //        writer.WriteLine("{0:x},{1}", entry.FileSpecSustain.Hash, instance.Reader.ReadNullTerminatedString(entry.FileSpecSustain.FileNamePointer));
+                            //}
+                        }
 
                         results.Add(new GameAsset()
                         {

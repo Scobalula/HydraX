@@ -76,13 +76,15 @@ namespace HydraX.Library.AssetContainers
             public bool DeltaRequiresTranslation { get; set; }
             [JsonProperty("transitions", Order = 2)]
             public Dictionary<string, StateObj> Transitions;
+            [JsonProperty("substates")]
+            public Dictionary<string, StateObj> SubStates;
         }
 
         /// <summary>
         /// Animation States
         /// </summary>
         [JsonProperty("states")]
-        public Dictionary<string, Dictionary<string, StateObj>> RootStates = new Dictionary<string, Dictionary<string, StateObj>>();
+        public Dictionary<string, StateObj> RootStates = new Dictionary<string, StateObj>();
 
         /// <summary>
         /// Saves the Animation State Machine to a formatted JSON file

@@ -17,6 +17,7 @@
 // ------------------------------------------------------------------------
 using System.ComponentModel;
 using System.Windows.Data;
+using System.Windows.Media;
 using HydraX.Library;
 
 namespace HydraX
@@ -73,6 +74,8 @@ namespace HydraX
         /// Property Changed Event
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
+
+        public SolidColorBrush High = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFFFF"));
 
         /// <summary>
         /// Creates a new Viewmodel

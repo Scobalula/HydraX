@@ -2,8 +2,8 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style TargetType="{x:Type Button}">
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}"/>
-        <Setter Property="Background" Value="#FF2D2D2D"/>
-        <Setter Property="BorderBrush" Value="#FF2D2D2D"/>
+        <Setter Property="Background" Value="#FF035B96"/>
+        <Setter Property="BorderBrush" Value="#FF035B96"/>
         <Setter Property="Foreground" Value="#FFFFFFFF"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -20,12 +20,12 @@
                             <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="true">
-                            <Setter Property="Background" TargetName="border" Value="#FF3D3D3D"/>
-                            <Setter Property="BorderBrush" TargetName="border" Value="#FF3D3D3D"/>
+                            <Setter Property="Background" TargetName="border" Value="#FF08649C"/>
+                            <Setter Property="BorderBrush" TargetName="border" Value="#FF08649C"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="true">
-                            <Setter Property="Background" TargetName="border" Value="#FF2A2A2A"/>
-                            <Setter Property="BorderBrush" TargetName="border" Value="#FF2A2A2A"/>
+                            <Setter Property="Background" TargetName="border" Value="#FF005A94"/>
+                            <Setter Property="BorderBrush" TargetName="border" Value="#FF005A94"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="false">
                             <Setter Property="Background" TargetName="border" Value="#FF909090"/>

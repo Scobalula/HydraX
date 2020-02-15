@@ -156,11 +156,6 @@ namespace HydraX
                             Log(string.Format("Exported {0}", asset.Name), "INFO");
                         }
                     }
-                    catch (IOException)
-                    {
-                        //    // IO Exceptions can be skipped, they're 99% of time due to duplicate assets and 
-                        //    // 2 threads attempting to write them at the same time
-                    }
                     catch (Exception e)
                     {
                         // Anything else we should log it
@@ -219,6 +214,7 @@ namespace HydraX
                     case HydraStatus.Success:
                         {
                             ViewModel.Assets.AddAssets(Instance.Assets);
+                            Title = string.Format("HydraX | Loaded {0} assets from {1}", Instance.Assets.Count, Instance.Game.Name);
                             Log(string.Format("Loaded {0} Assets from {1} Successfully", Instance.Assets.Count, Instance.Game.Name), "INFO");
                             break;
                         }

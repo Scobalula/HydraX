@@ -73,6 +73,9 @@
     <Compile Include="CommonStructures\Vector2.cs" />
     <Compile Include="CommonStructures\Vector3.cs" />
     <Compile Include="CommonStructures\Vector4.cs" />
+    <Compile Include="Games\BlackOps3\AssetPools\DestructibleDef.cs" />
+    <Compile Include="Games\BlackOps3\AssetPools\Character.cs" />
+    <Compile Include="Games\BlackOps3\AssetPools\XAnim.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\Localize.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\Material.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\XCam.cs" />

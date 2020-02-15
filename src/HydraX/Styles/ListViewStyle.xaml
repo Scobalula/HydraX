@@ -3,10 +3,10 @@
                     xmlns:Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2">
     <!-- List View Style -->
     <Style TargetType="{x:Type ListView}">
-        <Setter Property="Background" Value="#FF2D2D2D"/>
-        <Setter Property="BorderBrush" Value="#FF2D2D2D"/>
+        <Setter Property="Background" Value="#FF031F4B"/>
+        <Setter Property="BorderBrush" Value="#FF031F4B"/>
         <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Foreground" Value="#FFD0D0D0"/>
+        <Setter Property="Foreground" Value="#FFFFFFFF"/>
         <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
         <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
         <Setter Property="ScrollViewer.CanContentScroll" Value="true"/>
@@ -44,7 +44,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsSelected" Value="true">
-                            <Setter Property="Background" Value="#FF808080"/>
+                            <Setter Property="Background" Value="#FF035B96"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -78,7 +78,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type GridViewColumnHeader}">
                     <Grid>
-                        <Border BorderThickness="1,2,1,0" BorderBrush="{x:Null}" Background="#FF464646">
+                        <Border BorderThickness="1,2,1,0" BorderBrush="{x:Null}" Background="#FF035B96">
                             <TextBlock x:Name="ContentHeader" Text="{TemplateBinding Content}" Padding="5,5,5,5" Width="{TemplateBinding Width}" VerticalAlignment="Center" />
                         </Border>
                         <Thumb x:Name="PART_HeaderGripper" HorizontalAlignment="Right" Margin="0,0,-9,0" Style="{StaticResource GridViewColumnHeaderGripper}" />
@@ -86,7 +86,7 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Setter Property="Foreground" Value="#FFB0B0B0" />
+        <Setter Property="Foreground" Value="#FFFFFFFF" />
         <Setter Property="IsHitTestVisible" Value="True"/>
         <Setter Property="HorizontalContentAlignment" Value="Left"></Setter>
     </Style>

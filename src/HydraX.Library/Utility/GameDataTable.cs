@@ -313,7 +313,7 @@ namespace HydraX.Library
         public static Asset ConvertStructToGDTAsset(byte[] assetBuffer, Tuple<string, int, int>[] properties, HydraInstance instance, Func<byte[], int, int, HydraInstance, object> extendedDataHandler = null)
         {
             // Create new asset
-            var asset = new GameDataTable.Asset();
+            var asset = new Asset();
 
             // Loop through potential properties
             foreach (var property in properties)
@@ -387,35 +387,45 @@ namespace HydraX.Library
                             asset[property.Item1] = instance.Game.GetString(BitConverter.ToInt32(assetBuffer, property.Item2), instance);
                             break;
                         }
-                    // Asset References
-                    case 0x28:
+                    case 0xA:
                         {
-                            // Pull from the weapon name rather than the asset name
-                            asset[property.Item1] = instance.Game.GetAssetName(BitConverter.ToInt64(assetBuffer, property.Item2), instance, 8);
+                            var assetName = instance.Game.GetAssetName(BitConverter.ToInt64(assetBuffer, property.Item2), instance, 0);
+                            asset[property.Item1] = string.IsNullOrWhiteSpace(assetName) ? "" : "fx\\" + Path.ChangeExtension(assetName.Replace(@"/", @"\").Replace(@"\", @"\\"), ".efx");
                             break;
                         }
-                    case 0xA:
                     case 0xB:
                     case 0xD:
                     case 0x10:
-                    case 0x1F:
-                    case 0x1B:
-                    case 0x1D:
+                    case 0x11:
+                    case 0x12:
+                    case 0x13:
+                    case 0x14:
+                    case 0x16:
+                    case 0x17:
                     case 0x19:
                     case 0x1A:
+                    case 0x1B:
+                    case 0x1C:
+                    case 0x1D:
+                    case 0x1E:
+                    case 0x1F:
+                    case 0x20:
+                    case 0x21:
+                    case 0x22:
+                    case 0x23:
+                    case 0x24:
+                    case 0x25:
                     case 0x26:
                     case 0x27:
+                    case 0x28:
+                    case 0x29:
                     case 0x2A:
                     case 0x2C:
                     case 0x2D:
-                    case 0x11:
-                    case 0x16:
-                    case 0x17:
-                    case 0x1E:
                     case 0x2F:
-                    case 0x22:
-                    case 0x23:
-                    case 0x20:
+                    case 0x30:
+                    case 0x31:
+                    case 0x32:
                         {
                             var assetName = instance.Game.GetAssetName(BitConverter.ToInt64(assetBuffer, property.Item2), instance, property.Item3 == 0x10 ? 0xF8 : 0);
                             if (property.Item3 == 0xA)
@@ -455,6 +465,8 @@ namespace HydraX.Library
                             break;
                         }
                 }
+
+                //assetBuffer[property.Item2] = 0xAF;
             }
 
             // Done

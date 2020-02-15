@@ -315,7 +315,7 @@ namespace HydraX.Library
                             }
                         }
                     case 0x34:
-                        return "table" + BitConverter.ToInt32(assetBuffer, offset).ToString();
+                        return "table" + (BitConverter.ToInt32(assetBuffer, offset) + 1).ToString();
                     case 0x35:
                         return AISpecies[BitConverter.ToInt32(assetBuffer, offset)];
                     case 0x36:

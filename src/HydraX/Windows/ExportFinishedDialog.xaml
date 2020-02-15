@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HydraX"
         mc:Ignorable="d"
-        Background="#FF373737"
+        Background="#FF04396C"
         Title="HydraX | Export Complete" Height="142.728" Width="307.728" WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
     <Grid>

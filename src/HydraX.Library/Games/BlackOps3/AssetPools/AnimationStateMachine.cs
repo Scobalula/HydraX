@@ -270,7 +270,7 @@ namespace HydraX.Library
 
                 var animStateMachine = new AnimationStateMachineObj
                 {
-                    RootStates = new Dictionary<string, Dictionary<string, AnimationStateMachineObj.StateObj>>()
+                    RootStates = new Dictionary<string, AnimationStateMachineObj.StateObj>()
                 };
 
                 var rootStates = instance.Reader.ReadArray<RootState>(header.RootStatesPointer, header.RootStateCount);
@@ -280,12 +280,16 @@ namespace HydraX.Library
                 {
                     var name = instance.Game.GetString(rootStates[i].NameStringIndex, instance);
 
-                    animStateMachine.RootStates[name] = new Dictionary<string, AnimationStateMachineObj.StateObj>();
+
+                    animStateMachine.RootStates[name] = new AnimationStateMachineObj.StateObj
+                    {
+                        SubStates = rootStates[i].SubStateIndicesPointer > 0 ? new Dictionary<string, AnimationStateMachineObj.StateObj>() : null
+                    };
 
                     var indices = instance.Reader.ReadArray<int>(rootStates[i].SubStateIndicesPointer, rootStates[i].SubStateCount);
 
                     foreach (var index in indices)
-                        animStateMachine.RootStates[name][subStateObjects[index].Name] = subStateObjects[index];
+                        animStateMachine.RootStates[name].SubStates[subStateObjects[index].Name] = subStateObjects[index];
                 }
 
                 animStateMachine.Save(Path.Combine(instance.AnimationStateMachinesFolder, asset.Name));

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="HydraX | Settings"
-        Background="#FF373737"
+        Background="#FF04396C"
         Height="390.5" Width="299.5"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
@@ -13,7 +13,7 @@
 
         <!-- General -->
         <Rectangle Margin="10,19,10,10" Stroke="White"/>
-        <Label Content="General" HorizontalAlignment="Left" Margin="32,0,0,0" VerticalAlignment="Top" Background="#FF373737" Foreground="White" FontSize="18" Height="34" Width="71"/>
+        <Label Content="General" HorizontalAlignment="Left" Margin="32,0,0,0" VerticalAlignment="Top" Background="#FF04396C" Foreground="White" FontSize="18" Height="34" Width="71"/>
         <CheckBox IsChecked="True" x:Name="ShowAI" Content="Show &quot;AI&quot; Assets" HorizontalAlignment="Left" Margin="32,39,0,0" VerticalAlignment="Top" Width="181" Background="#FF838383" BorderBrush="Black" Foreground="White"/>
         <CheckBox IsChecked="True" x:Name="ShowAttachment" Content="Show &quot;Attachment&quot; Assets" HorizontalAlignment="Left" Margin="32,59,0,0" VerticalAlignment="Top" Width="181" Background="#FF838383" BorderBrush="Black" Foreground="White"/>
         <CheckBox IsChecked="True" x:Name="ShowMisc" Content="Show &quot;Misc&quot; Assets" HorizontalAlignment="Left" Margin="32,79,0,0" VerticalAlignment="Top" Width="181" Background="#FF838383" BorderBrush="Black" Foreground="White"/>
