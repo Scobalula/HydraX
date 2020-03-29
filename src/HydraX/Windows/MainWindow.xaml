@@ -39,8 +39,11 @@
         <Button ContentTemplate="{StaticResource OpenMemoryIcon}" ToolTip="Load assets from a supported game's memory." Style="{StaticResource IconButtonStyle}" Click="OpenFileClick"  HorizontalAlignment="Left"  Width="41" Height="41" VerticalAlignment="Top"/>
         <Button ContentTemplate="{StaticResource ExportAllIcon}" ToolTip="Exports all listed assets in the asset list." Style="{StaticResource IconButtonStyle}" Click="ExportAllClick" HorizontalAlignment="Left"  Width="41" Margin="0,41,0,0" Height="41" VerticalAlignment="Top"/>
         <Button ContentTemplate="{StaticResource ExportIcon}" ToolTip="Exports selected assets in the asset list." Style="{StaticResource IconButtonStyle}" Click="ExportSelectedClick" HorizontalAlignment="Left"  Width="41" Margin="0,82,0,0" Height="41" VerticalAlignment="Top"/>
+        <Button ContentTemplate="{StaticResource DonateIcon}" ToolTip="Donate to support my caffine addiction and the all thing." Style="{StaticResource IconButtonStyle}" Click="DonateClick" HorizontalAlignment="Left"  Width="41" Height="41" VerticalAlignment="Bottom" Margin="0,0,0,82"/>
+        <Button ContentTemplate="{StaticResource DiscordIcon}" ToolTip="Join my Discord server for discussion and support." Style="{StaticResource IconButtonStyle}" Click="DiscordClick" HorizontalAlignment="Left"  Width="41" Height="40" VerticalAlignment="Bottom" Margin="0,0,0,123"/>
         <Button ContentTemplate="{StaticResource AboutIcon}" ToolTip="Opens the about window." Style="{StaticResource IconButtonStyle}" Click="AboutClick" HorizontalAlignment="Left"  Width="41" Height="41" VerticalAlignment="Bottom" Margin="0,0,0,41"/>
         <Button ContentTemplate="{StaticResource SettingsIcon}" ToolTip="Opens the settings window." Style="{StaticResource IconButtonStyle}" Click="SettingsClick" HorizontalAlignment="Left"  Width="41" Height="41" VerticalAlignment="Bottom"/>
+
         <Rectangle x:Name="Dimmer" Fill="#7F000000" Visibility="Hidden"/>
     </Grid>
 </Window>

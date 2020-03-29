@@ -1,4 +1,5 @@
 ﻿using HydraX.Library;
+using PhilLibX.Compression;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -326,6 +327,16 @@ namespace HydraX
                 Owner = this
             }.ShowDialog();
             SetDimmer(Visibility.Hidden);
+        }
+
+        private void DonateClick(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://www.paypal.me/Scobalula");
+        }
+
+        private void DiscordClick(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://discord.gg/fGVpV39");
         }
     }
 }

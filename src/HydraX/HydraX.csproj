@@ -63,6 +63,14 @@
     <Compile Include="Windows\SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
+    <Page Include="Icons\DiscordIcon.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Icons\DonateIcon.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Windows\AboutWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -196,6 +204,10 @@
     <ProjectReference Include="..\HydraX.Library\HydraX.Library.csproj">
       <Project>{FDD342BD-048F-43A0-A1FE-3F3652A424B5}</Project>
       <Name>HydraX.Library</Name>
+    </ProjectReference>
+    <ProjectReference Include="D:\VisualStudio\Projects\PhilLibX\src\PhilLibX\PhilLibX\PhilLibX.csproj">
+      <Project>{0F468D5B-2F30-42F5-9043-920040D83D9D}</Project>
+      <Name>PhilLibX</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

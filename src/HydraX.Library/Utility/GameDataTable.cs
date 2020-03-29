@@ -351,10 +351,10 @@ namespace HydraX.Library
                             asset[property.Item1] = BitConverter.ToInt32(assetBuffer, property.Item2);
                             break;
                         }
-                    /// Unknown
+                    // Bools (8Bit)
                     case 5:
                         {
-                            asset[property.Item1] = BitConverter.ToInt32(assetBuffer, property.Item2);
+                            asset[property.Item1] = assetBuffer[property.Item2];
                             break;
                         }
                     // Bools (8Bit)

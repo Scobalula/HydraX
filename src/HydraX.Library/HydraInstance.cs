@@ -227,7 +227,7 @@ namespace HydraX.Library
                 {
                     for (int i = 0; i < game.ProcessNames.Length; i++)
                     {
-                        if (process.ProcessName == game.ProcessNames[i])
+                        if (process.ProcessName.ToLower() == game.ProcessNames[i].ToLower())
                         {
                             Game = (IGame)game.Clone();
                             Game.ProcessIndex = i;

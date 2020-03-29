@@ -21,6 +21,8 @@
                 <ResourceDictionary Source="Icons/OpenFileIcon.xaml"/>
                 <ResourceDictionary Source="Icons/OpenMemoryIcon.xaml"/>
                 <ResourceDictionary Source="Icons/AboutIcon.xaml"/>
+                <ResourceDictionary Source="Icons/DonateIcon.xaml"/>
+                <ResourceDictionary Source="Icons/DiscordIcon.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

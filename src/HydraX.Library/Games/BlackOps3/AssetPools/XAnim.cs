@@ -229,12 +229,7 @@ namespace HydraX.Library
             /// </summary>
             public List<GameAsset> Load(HydraInstance instance)
             {
-
                 var results = new List<GameAsset>();
-
-                // Not complete
-                return results;
-
 
                 var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 0x20));
 
@@ -297,6 +292,7 @@ namespace HydraX.Library
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
                 using (var writer = new BinaryWriter(File.Create(path)))
+                using (var infoWriter = new StreamWriter(path + ".info.txt"))
                 {
                     var fileHeader = instance.Reader.ReadStruct<XAnimAsset>(asset.HeaderAddress);
                     fileHeader.ConvertPointers();
@@ -324,10 +320,21 @@ namespace HydraX.Library
 
                         foreach (var notify in notifyInfo)
                         {
-                            writer.Write(notify.Time);
-                            writer.WriteNullTerminatedString(instance.Game.GetString(notify.Type, instance));
-                            writer.WriteNullTerminatedString(instance.Game.GetString(notify.Param1, instance));
-                            writer.WriteNullTerminatedString(instance.Game.GetString(notify.Param2, instance));
+                            var time = notify.Time;
+                            var type = instance.Game.GetString(notify.Type, instance);
+                            var p1   = instance.Game.GetString(notify.Param1, instance);
+                            var p2   = instance.Game.GetString(notify.Param2, instance);
+
+                            writer.Write(time);
+                            writer.WriteNullTerminatedString(type);
+                            writer.WriteNullTerminatedString(p1);
+                            writer.WriteNullTerminatedString(p2);
+
+                            infoWriter.WriteLine("Time:     {0}", time);
+                            infoWriter.WriteLine("Type:     {0}", type);
+                            infoWriter.WriteLine("Param1:   {0}", p1);
+                            infoWriter.WriteLine("Param2:   {0}", p2);
+                            infoWriter.WriteLine();
                         }
                     }
 
