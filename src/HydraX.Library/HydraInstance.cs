@@ -26,6 +26,7 @@ namespace HydraX.Library
             { "Physic",             new GameDataTable() },
             { "Weapon",             new GameDataTable() },
             { "Material",           new GameDataTable() },
+            { "XModel",             new GameDataTable() },
         };
 
         /// <summary>

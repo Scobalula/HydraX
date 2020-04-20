@@ -52,6 +52,7 @@
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
@@ -75,6 +76,7 @@
     <Compile Include="CommonStructures\Vector4.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\DestructibleDef.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\Character.cs" />
+    <Compile Include="Games\BlackOps3\AssetPools\XModel.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\XAnim.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\Localize.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\Material.cs" />
@@ -102,6 +104,7 @@
     <Compile Include="Games\BlackOps3\AssetPools\VehicleFXDef.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\TagFX.cs" />
     <Compile Include="MaterialTechniqueSet.cs" />
+    <Compile Include="Notifiable.cs" />
     <Compile Include="Utility\GameAsset.cs" />
     <Compile Include="Utility\GameDataTable.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\AnimationSelectorTable.cs" />

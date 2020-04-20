@@ -48,7 +48,7 @@ namespace HydraX
         /// </summary>
         private void HomePageButtonClick(object sender, RoutedEventArgs e)
         {
-            Process.Start("http://scobalula.github.io/HydraX");
+            Process.Start("https://github.com/Scobalula/HydraX");
         }
     }
 }

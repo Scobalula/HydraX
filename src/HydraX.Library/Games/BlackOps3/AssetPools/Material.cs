@@ -212,6 +212,62 @@ namespace HydraX.Library
             };
 
             /// <summary>
+            /// Image Semantics
+            /// </summary>
+            public static string[] Semantics { get; } =
+            {
+                "UNKNOWN",
+                "2d",
+                "diffuseMap",
+                "effectMap",
+                "normalMap",
+                "specularMask",
+                "specularMap",
+                "glossMap",
+                "occlusionMap",
+                "revealMap",
+                "multipleMask",
+                "thicknessMap",
+                "camoMap",
+                "One Channel",
+                "Two Channel",
+                "Emblem",
+                "Custom",
+                "LutTpage",
+                "Light Cookie",
+                "HDR",
+                "Eye Caustic"
+            };
+
+            /// <summary>
+            /// Image Compression
+            /// </summary>
+            public static string[] Compression { get; } =
+            {
+                "compressed",
+                "compressed",
+                "compressed high color",
+                "compressed",
+                "compressed",
+                "compressed",
+                "compressed",
+                "compressed",
+                "compressed",
+                "compressed",
+                "compressed",
+                "compressed",
+                "compressed",
+                "compressed",
+                "compressed",
+                "compressed",
+                "compressed",
+                "compressed",
+                "compressed",
+                "compressed",
+                "compressed"
+            };
+
+            /// <summary>
             /// Size of each asset
             /// </summary>
             public int AssetSize { get; set; }
@@ -289,6 +345,21 @@ namespace HydraX.Library
                 if (asset.Name != Path.GetFileNameWithoutExtension(instance.Reader.ReadNullTerminatedString(header.NamePointer).Split('|')[0]))
                     return HydraStatus.MemoryChanged;
 
+                foreach(var result in ExportMTL(header, instance))
+                    instance.GDTs["Material"][result.Name] = result;
+
+                return HydraStatus.Success;
+            }
+
+            /// <summary>
+            /// Exports the given asset from this pool
+            /// </summary>
+            public static List<GameDataTable.Asset> ExportMTL(MaterialAsset header, HydraInstance instance)
+            {
+                var results = new List<GameDataTable.Asset>();
+
+                var name = Path.GetFileNameWithoutExtension(instance.Reader.ReadNullTerminatedString(header.NamePointer).Split('|')[0]);
+
                 // We need the techset for buffer info
                 var techset = instance.Reader.ReadStruct<MaterialTechniqueSet>(header.TechniquePointer);
                 var mtlType = Path.GetFileNameWithoutExtension(instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(header.TechniquePointer)).Split('#')[0]);
@@ -300,7 +371,7 @@ namespace HydraX.Library
 
                 // Add base stuffs
                 // Create asset
-                var gdtAsset = new GameDataTable.Asset(asset.Name, "material");
+                var gdtAsset = new GameDataTable.Asset(name, "material");
                 // Set Default Properties
                 gdtAsset.Properties.Add("surfaceType", SurfaceTypes.TryGetValue(BitConverter.ToUInt32(header.FlagsAndSettings, 28), out var surfaceType) ? surfaceType : "<none>");
                 gdtAsset.Properties.Add("template", "material.template");
@@ -321,6 +392,17 @@ namespace HydraX.Library
                         // Ignore combo, overrides the actual material we're looking for!
                         if (gdtAsset.Properties[slot].ToString().EndsWith("_combo"))
                             throw new Exception("Invalid Material. Contains combo image, look for another material with same name!");
+
+                        // TODO: Improve this (and material support overall)
+                        var imgAsset = new GameDataTable.Asset(gdtAsset.Properties[slot].ToString(), "image");
+
+                        imgAsset["baseImage"]         = string.Format("<EXPORT_DIRECTORY_FIND_REPLACE_ME_OwO>\\\\{0}.png", imgAsset.Name);
+                        imgAsset["imageType"]         = "Texture";
+                        imgAsset["type"]              = "image";
+                        imgAsset["compressionMethod"] = Compression[instance.Reader.ReadBytes(materialImage.ImagePointer + 161, 1)[0]];
+                        imgAsset["semantic"]          = Semantics[instance.Reader.ReadBytes(materialImage.ImagePointer + 161, 1)[0]];
+
+                        results.Add(imgAsset);
                     }
                 }
 
@@ -485,9 +567,9 @@ namespace HydraX.Library
                     }
                 }
 
-                instance.GDTs["Material"][asset.Name] = gdtAsset;
+                results.Add(gdtAsset);
 
-                return HydraStatus.Success;
+                return results;
             }
 
             public static double PerformPostProcess(double value, SettingPostProcess processor)

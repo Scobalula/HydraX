@@ -66,7 +66,7 @@ namespace HydraX.Library
         /// </summary>
         public string[] ProcessNames => new string[]
         {
-            "blackops3_unrankeddedicatedserver"
+            "BlackOps3"
         };
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace HydraX.Library
         /// </summary>
         public long[] AssetPoolsAddresses => new long[]
         {
-            0x68F84E0
+            0x94093F0
         };
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace HydraX.Library
         /// </summary>
         public long[] StringTableAddresses => new long[]
         {
-            0x225C884
+            0x4D5E280
         };
 
         /// <summary>

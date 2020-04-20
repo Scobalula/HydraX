@@ -30,9 +30,16 @@
                   ItemsSource="{Binding Assets}">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Width="512" Header="Name" DisplayMemberBinding="{Binding Name}"/>
-                    <GridViewColumn Width="128" Header="Type" DisplayMemberBinding="{Binding Type}"/>
-                    <GridViewColumn Width="230" Header="Information" DisplayMemberBinding="{Binding Information}"/>
+                    <GridViewColumn Width="384" Header="Name"       DisplayMemberBinding="{Binding DisplayName}"/>
+                    <GridViewColumn Width="128" Header="Type"       DisplayMemberBinding="{Binding Type}"/>
+                    <GridViewColumn Width="128" Header="Status">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path=Status}" Foreground="{Binding ForegroundColor}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Width="224" Header="Info"       DisplayMemberBinding="{Binding Information}"/>
                 </GridView>
             </ListView.View>
         </ListView>

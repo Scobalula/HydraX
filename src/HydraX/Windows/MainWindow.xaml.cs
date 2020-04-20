@@ -151,16 +151,19 @@ namespace HydraX
                         if (asset.AssetPool.Export(asset, Instance) == HydraStatus.MemoryChanged)
                         {
                             Log(string.Format("The expected data @ 0x{0:X} has changed, {1} skipped.", asset.HeaderAddress, asset.Name), "ERROR");
+                            asset.Status = "Error";
                         }
                         else
                         {
                             Log(string.Format("Exported {0}", asset.Name), "INFO");
+                            asset.Status = "Exported";
                         }
                     }
                     catch (Exception e)
                     {
                         // Anything else we should log it
                         Log(string.Format("An unhandled exception while exporting {0}:\n\n{1}", asset.Name, e), "ERROR");
+                        asset.Status = "Error";
                     }
 
                     if (progressWindow.IncrementProgress() || EndThread)

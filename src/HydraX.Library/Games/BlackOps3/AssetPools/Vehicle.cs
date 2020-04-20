@@ -581,9 +581,9 @@ namespace HydraX.Library
             /// </summary>
             private static readonly string[] NitrousTractionTypes =
             {
-                "TRACTION_TYPE_ALL_WD",
                 "TRACTION_TYPE_FRONT",
-                "TRACTION_TYPE_BACK"
+                "TRACTION_TYPE_BACK",
+                "TRACTION_TYPE_ALL_WD"
             };
             #endregion
 

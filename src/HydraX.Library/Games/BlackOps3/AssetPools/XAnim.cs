@@ -286,8 +286,6 @@ namespace HydraX.Library
                 if (asset.Name != instance.Reader.ReadNullTerminatedString(xanimAsset.NamePointer))
                     return HydraStatus.MemoryChanged;
 
-                Console.WriteLine(xanimAsset.DeltaPartsPointer);
-
                 string path = Path.Combine("exported_files", instance.Game.Name, "share", "raw", "xanim", asset.Name + ".xanim_raw");
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 

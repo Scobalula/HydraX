@@ -1,11 +1,12 @@
 ﻿using System.IO;
+using System.Windows.Media;
 
 namespace HydraX.Library
 {
     /// <summary>
     /// A generic class to hold a CoD Asset
     /// </summary>
-    public class GameAsset
+    public class GameAsset : Notifiable
     {
         /// <summary>
         /// Gets or Sets the Name of this Asset
@@ -21,6 +22,50 @@ namespace HydraX.Library
         /// Gets or Sets this Asset's Type
         /// </summary>
         public string Type { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the Asset Status
+        /// </summary>
+        public string Status
+        {
+            get
+            {
+                return GetValue<string>("Status");
+            }
+            set
+            {
+                SetValue(value, "Status");
+                // Update Foreground
+                NotifyPropertyChanged("ForegroundColor");
+            }
+        }
+
+        /// <summary>
+        /// Creates a new Game Asset
+        /// </summary>
+        public GameAsset()
+        {
+            Status = "Loaded";
+        }
+
+        /// <summary>
+        /// Gets the Foreground Color
+        /// </summary>
+        public Brush ForegroundColor
+        {
+            get
+            {
+                switch (Status)
+                {
+                    case "Exported":
+                        return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF63FF5E"));
+                    case "Error":
+                        return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFF6666"));
+                    default:
+                        return new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFFFF"));
+                }
+            }
+        }
 
         /// <summary>
         /// Gets or Sets Information for this Asset

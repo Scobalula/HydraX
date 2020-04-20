@@ -53,7 +53,7 @@ namespace HydraX
                 if (value != BackingFilterString)
                 {
                     BackingFilterString = value;
-                    FilterStrings = string.IsNullOrWhiteSpace(BackingFilterString) ? null : BackingFilterString.Split(',');
+                    FilterStrings = string.IsNullOrWhiteSpace(BackingFilterString) ? null : BackingFilterString.Split(' ');
                     AssetsView.Refresh();
                     OnPropertyChanged("FilterString");
                 }
@@ -85,19 +85,31 @@ namespace HydraX
             AssetsView = CollectionViewSource.GetDefaultView(Assets);
             AssetsView.Filter = delegate (object obj)
             {
+                // TODO: Optimize this for Greyhound, parse search string into an object we can utilize
                 if (FilterStrings != null && FilterStrings.Length > 0 && obj is GameAsset asset)
                 {
                     var assetName = asset.Name.ToLower();
+                    var assetType = asset.Type.ToLower();
+                    var result    = true;
 
                     foreach (var filterString in FilterStrings)
                     {
-                        if (!string.IsNullOrWhiteSpace(filterString) && assetName.Contains(filterString.ToLower()))
+                        if (filterString.StartsWith("type:"))
                         {
-                            return true;
+                            result = assetType.Contains(filterString.Replace("type:", "").ToLower());
                         }
+
+                        if(result)
+                        {
+                            if (!string.IsNullOrWhiteSpace(filterString) && !filterString.StartsWith("type:"))
+                                result = assetName.Contains(filterString.ToLower());
+                        }
+
+                        if (result)
+                            break;
                     }
 
-                    return false;
+                    return result;
                 }
 
                 return true;
