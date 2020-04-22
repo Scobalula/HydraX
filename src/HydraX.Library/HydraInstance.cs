@@ -2,6 +2,7 @@
 using PhilLibX.IO;
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -95,11 +96,17 @@ namespace HydraX.Library
         public string BehaviorFolder { get { return Path.Combine(ExportFolder, "behavior"); } }
 
         /// <summary>
+        /// Gets or Sets all assets in the GDT Database
+        /// </summary>
+        public List<string> GDTDatabase { get; set; }
+
+        /// <summary>
         /// Initializes Supported Games
         /// </summary>
         /// <returns></returns>
         public void Initialize()
         {
+            GDTDatabase = new List<string>();
             Games = new List<IGame>();
             var gameType = typeof(IGame);
             var games = AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where(p => gameType.IsAssignableFrom(p));
@@ -113,6 +120,53 @@ namespace HydraX.Library
                 TechniqueSetCache = JsonConvert.DeserializeObject<Dictionary<string, MaterialTechniqueSet>>(File.ReadAllText("Data\\TechsetCache.json"));
             }
             catch { }
+        }
+
+        /// <summary>
+        /// Refreshes list of assets from GDT DB
+        /// </summary>
+        public void RefreshGDTDB()
+        {
+            try
+            {
+                var toolsPath = Environment.GetEnvironmentVariable("TA_TOOLS_PATH");
+
+                if (!File.Exists("icudt64r53.dll"))
+                    File.Copy(Path.Combine(toolsPath, "bin\\icudt64r53.dll"), "icudt64r53.dll", true);
+                if (!File.Exists("icuin64r53.dll"))
+                    File.Copy(Path.Combine(toolsPath, "bin\\icuin64r53.dll"), "icuin64r53.dll", true);
+                if (!File.Exists("icuuc64r53.dll"))
+                    File.Copy(Path.Combine(toolsPath, "bin\\icuuc64r53.dll"), "icuuc64r53.dll", true);
+                if (!File.Exists("sqlite64r.dll"))
+                    File.Copy(Path.Combine(toolsPath, "bin\\sqlite64r.dll"), "sqlite64r.dll", true);
+
+                // Create and open the SQL Connection
+                var connection = new SQLiteConnection(@"data source=" + Path.Combine(toolsPath, "gdtdb\\gdt.db"));
+                connection.Open();
+
+                // Create Command
+                var command = new SQLiteCommand("SELECT name FROM _entity;", connection);
+
+                // Execute the Read
+                var reader = command.ExecuteReader();
+
+                // Loop all assets
+                while (reader.Read())
+                    GDTDatabase.Add(reader["name"].ToString().Split('/').Last());
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// Checks if the image exists in the GDT DB
+        /// </summary>
+        /// <param name="name">name of the image</param>
+        public bool ExistsInGDTDB(string name)
+        {
+            if (Settings["CheckGDTDB", "Yes"] == "No")
+                return false;
+
+            return GDTDatabase.Contains(name);
         }
 
         /// <summary>

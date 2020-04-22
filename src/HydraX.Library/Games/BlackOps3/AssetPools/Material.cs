@@ -346,7 +346,12 @@ namespace HydraX.Library
                     return HydraStatus.MemoryChanged;
 
                 foreach(var result in ExportMTL(header, instance))
-                    instance.GDTs["Material"][result.Name] = result;
+                {
+                    if (!instance.ExistsInGDTDB(result.Name))
+                    {
+                        instance.GDTs["Material"][result.Name] = result;
+                    }
+                }
 
                 return HydraStatus.Success;
             }

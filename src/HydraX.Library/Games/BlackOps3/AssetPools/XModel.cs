@@ -104,7 +104,12 @@ namespace HydraX.Library
                 foreach (var mtlPointer in mtlPointers)
                 {
                     foreach (var result in Material.ExportMTL(instance.Reader.ReadStruct<Material.MaterialAsset>(mtlPointer), instance))
-                        gdt[result.Name] = result;
+                    {
+                        if(!instance.ExistsInGDTDB(result.Name))
+                        {
+                            gdt[result.Name] = result;
+                        }
+                    }
                 }
 
                 var path = Path.Combine(instance.ExportFolder, "model_export", "hydra_model_gdts", asset.Name + ".gdt");

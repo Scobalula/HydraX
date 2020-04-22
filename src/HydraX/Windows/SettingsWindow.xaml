@@ -26,6 +26,7 @@
         <CheckBox IsChecked="True" x:Name="AutoUpdates" Content="Check for updates on start up" Margin="32,0,27,40" VerticalAlignment="Bottom" Background="#FF838383" BorderBrush="Black" Foreground="White"/>
         <CheckBox IsChecked="True" x:Name="ShowMaterials" Content="Show &quot;Material&quot; Assets" HorizontalAlignment="Left" Margin="32,219,0,0" VerticalAlignment="Top" Width="181" Background="#FF838383" BorderBrush="Black" Foreground="White"/>
         <CheckBox IsChecked="True" x:Name="OverwriteGDT" Content="Overwrite GDTs on Export" Margin="32,0,27,60" VerticalAlignment="Bottom" Background="#FF838383" BorderBrush="Black" Foreground="White"/>
+        <CheckBox IsChecked="True" x:Name="CheckGDTDB" Content="Check for GDTDB for Images/Materials" Margin="32,0,27,20" VerticalAlignment="Bottom" Background="#FF838383" BorderBrush="Black" Foreground="White"/>
 
     </Grid>
 </Window>

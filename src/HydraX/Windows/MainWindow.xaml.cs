@@ -143,6 +143,7 @@ namespace HydraX
                 SetDimmer(Visibility.Visible);
 
                 Instance.LoadGDTs();
+                Instance.RefreshGDTDB();
 
                 Parallel.ForEach(assets, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, (asset, loop) =>
                 {
