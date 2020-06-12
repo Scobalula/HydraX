@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Messaging;
+using System.Security.Policy;
+using System.Text;
 
 namespace HydraX.Library
 {
@@ -66,29 +71,23 @@ namespace HydraX.Library
         /// </summary>
         public string[] ProcessNames => new string[]
         {
-            "BlackOps3"
+            "blackops3"
         };
 
         /// <summary>
         /// Gets Black Ops 3 Asset Pools Addresses
         /// </summary>
-        public long[] AssetPoolsAddresses => new long[]
-        {
-            0x94093F0
-        };
+        public long AssetPoolsAddress { get; set; }
 
         /// <summary>
         /// Gets Black Ops 3 Asset Sizes Addresses (Not Implemented for Black Ops 3, stored in pool info)
         /// </summary>
-        public long[] AssetSizesAddresses => throw new NotImplementedException();
+        public long AssetSizesAddress { get; set; }
 
         /// <summary>
-        /// Gets Black Ops 3 String Table Addresses
+        /// Gets Black Ops 3 String Pool
         /// </summary>
-        public long[] StringTableAddresses => new long[]
-        {
-            0x4D5E280
-        };
+        public long StringPoolAddress { get; set; }
 
         /// <summary>
         /// Gets or Sets Black Ops 3's Base Address (ASLR)
@@ -104,6 +103,11 @@ namespace HydraX.Library
         /// Gets or sets the list of Asset Pools
         /// </summary>
         public List<IAssetPool> AssetPools { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the Zone Names for each asset
+        /// </summary>
+        public Dictionary<long, string> ZoneNames { get; set; }
 
         /// <summary>
         /// Black Ops III Asset Pool Indices
@@ -341,7 +345,7 @@ namespace HydraX.Library
             if (hash == 0)
                 return "";
 
-            return AliasHashes.TryGetValue(hash, out var alias) ? alias : hash.ToString("x");
+            return AliasHashes.TryGetValue(hash, out var alias) ? alias : "";
         }
 
         /// <summary>
@@ -357,7 +361,7 @@ namespace HydraX.Library
 
         public string GetString(long index, HydraInstance instance)
         {
-            return instance.Reader.ReadNullTerminatedString(instance.Game.BaseAddress + instance.Game.StringTableAddresses[instance.Game.ProcessIndex] + (0x1C * index));
+            return instance.Reader.ReadNullTerminatedString(instance.Game.StringPoolAddress + (0x1C * index) + 4);
         }
 
         public object Clone()
@@ -365,17 +369,61 @@ namespace HydraX.Library
             return MemberwiseClone();
         }
 
-        public bool ValidateAddresses(HydraInstance instance)
+        [StructLayout(LayoutKind.Sequential, Pack = 8, Size = 0x20)]
+        struct XAssetEntryPoolEntry
         {
-            BaseAddress = instance.Reader.GetBaseAddress();
-            var pools = instance.Reader.ReadArray<AssetPoolInfo>(BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex], 4);
-            bool result = true;
+            public AssetPool AssetType;
+            public long HeaderPointer;
+            public byte ZoneIndex;
+        }
 
-            for (int i = 0; i < pools.Length; i++)
-                if (StructSizes[i] != pools[i].AssetSize)
-                    result = false;
+        public bool Initialize(HydraInstance instance)
+        {
+            var module = instance.Reader.Modules[0];
 
-            return result;
+            var pools = instance.Reader.FindBytes(
+                new byte?[] { 0x63, 0xC1, 0x48, 0x8D, 0x05, null, null, null, null, 0x49, 0xC1, 0xE0, null, 0x4C, 0x03, 0xC0 },
+                module.BaseAddress.ToInt64(),
+                module.BaseAddress.ToInt64() + module.Size,
+                true);
+            var strPool = instance.Reader.FindBytes(
+                new byte?[] { 0x4C, 0x03, 0xF6, 0x33, 0xDB, 0x49, null, null, 0x8B, 0xD3, 0x8D, 0x7B },
+                module.BaseAddress.ToInt64(),
+                module.BaseAddress.ToInt64() + module.Size,
+                true);
+            var poolEntrys = instance.Reader.FindBytes(
+                new byte?[] { 0x48, 0x8D, 0x05, null , null , null , null, 0x41, 0x8B, 0x34, 0x24, 0x85, 0xF6, 0x0F, 0x84, 0xF0, 0x00, 0x00, 0x00, 0x4C, 0x8D },
+                module.BaseAddress.ToInt64(),
+                module.BaseAddress.ToInt64() + module.Size,
+                true);
+
+            AssetPoolsAddress = instance.Reader.ReadInt32(pools[0] + 5) + pools[0] + 9;
+            StringPoolAddress = instance.Reader.ReadInt32(strPool[0] + 29) + strPool[0] + 33;
+
+            var zoneEntriesAddress = instance.Reader.ReadInt32(poolEntrys[0] + 22) + poolEntrys[0] + 26;
+
+            // Store zone names by asset pointer
+            var zones = new string[65];
+            zones[0] = "default_zone";
+            for (int i = 1; i < zones.Length; i++)
+            {
+                zones[i] = instance.Reader.ReadNullTerminatedString(zoneEntriesAddress + 96 * i);
+
+                if (string.IsNullOrWhiteSpace(zones[i]))
+                    zones[i] = "unknown";
+            }
+            // Max of 156672 as per listassetpool
+            var poolEntries = instance.Reader.ReadArrayUnsafe<XAssetEntryPoolEntry>(instance.Reader.ReadInt32(poolEntrys[0] + 3) + poolEntrys[0] + 7, 156672);
+
+            ZoneNames = new Dictionary<long, string>();
+
+            foreach (var poolEntry in poolEntries)
+            {
+                if (poolEntry.HeaderPointer != 0) // Validate if this is not an empty slot (same as pools, points to next, but we can check Header Pointer)
+                    ZoneNames[poolEntry.HeaderPointer] = zones[poolEntry.ZoneIndex];
+            }
+
+            return true;
         }
 
         public string GetAssetName(long address, HydraInstance instance, long offset = 0)
@@ -399,6 +447,175 @@ namespace HydraX.Library
             }
 
             return "";
+        }
+
+        /// <summary>
+        /// Converts an asset buffer to GDT Asset, the buffer passed will be the exact same as the buffer Linker uses to load the GDT asset
+        /// </summary>
+        public static GameDataTable.Asset ConvertAssetBufferToGDTAsset(byte[] assetBuffer, Tuple<string, int, int>[] properties, HydraInstance instance, Func<GameDataTable.Asset, byte[], int, int, HydraInstance, object> extendedDataHandler = null)
+        {
+            var asset = new GameDataTable.Asset();
+
+            foreach (var property in properties)
+            {
+                switch (property.Item3)
+                {
+                    // Strings (Enum that points to a string)
+                    case 0:
+                        {
+                            asset[property.Item1] = instance.Reader.ReadNullTerminatedString(BitConverter.ToInt64(assetBuffer, property.Item2));
+                            break;
+                        }
+                    // Inline Character Array
+                    case 1:
+                        {
+                            asset[property.Item1] = Encoding.ASCII.GetString(assetBuffer, property.Item2, 1024).TrimEnd('\0');
+                            break;
+                        }
+                    // Inline Character Array
+                    case 2:
+                        {
+                            asset[property.Item1] = Encoding.ASCII.GetString(assetBuffer, property.Item2, 64).TrimEnd('\0');
+                            break;
+                        }
+                    // Inline Character Array
+                    case 3:
+                        {
+                            asset[property.Item1] = Encoding.ASCII.GetString(assetBuffer, property.Item2, 256).TrimEnd('\0');
+                            break;
+                        }
+                    // 32Bit Ints
+                    case 4:
+                        {
+                            asset[property.Item1] = BitConverter.ToInt32(assetBuffer, property.Item2);
+                            break;
+                        }
+                    // Unsigned Ints
+                    case 5:
+                        {
+                            asset[property.Item1] = BitConverter.ToUInt32(assetBuffer, property.Item2);
+                            break;
+                        }
+                    // Bools
+                    case 6:
+                        {
+                            asset[property.Item1] = assetBuffer[property.Item2];
+                            break;
+                        }
+                    // QBools
+                    case 7:
+                        {
+                            asset[property.Item1] = BitConverter.ToInt32(assetBuffer, property.Item2);
+                            break;
+                        }
+                    // Floats
+                    case 8:
+                        {
+                            asset[property.Item1] = BitConverter.ToSingle(assetBuffer, property.Item2);
+                            break;
+                        }
+                    // Milliseconds
+                    case 9:
+                        {
+                            asset[property.Item1] = BitConverter.ToInt32(assetBuffer, property.Item2) / 1000.0;
+                            break;
+                        }
+                    // Script Strings
+                    case 0x15:
+                        {
+                            asset[property.Item1] = instance.Game.GetString(BitConverter.ToInt32(assetBuffer, property.Item2), instance);
+                            break;
+                        }
+                    case 0xA:
+                        {
+                            var assetName = instance.Game.GetAssetName(BitConverter.ToInt64(assetBuffer, property.Item2), instance, 0);
+                            asset[property.Item1] = string.IsNullOrWhiteSpace(assetName) ? "" : @"fx\\" + Path.ChangeExtension(assetName.Replace(@"/", @"\").Replace(@"\", @"\\"), ".efx");
+                            break;
+                        }
+                    // Images
+                    case 0x10:
+                    case 0x11:
+                        {
+                            asset[property.Item1] = instance.Game.GetAssetName(BitConverter.ToInt64(assetBuffer, property.Item2), instance, 0xF8);
+                            break;
+                        }
+                    // Alias Hash
+                    case 0x18:
+                        {
+                            asset[property.Item1] = GetAliasByHash(BitConverter.ToUInt32(assetBuffer, property.Item2));
+                            break;
+                        }
+                    // Flametable Assets
+                    case 0x2B:
+                        {
+                            asset[property.Item1] = instance.Game.GetAssetName(BitConverter.ToInt64(assetBuffer, property.Item2), instance, 0x1B0);
+                            break;
+                        }
+                    // Standard Assets
+                    case 0xB:
+                    case 0xD:
+                    case 0xF:
+                    case 0x12:
+                    case 0x13:
+                    case 0x14:
+                    case 0x16:
+                    case 0x17:
+                    case 0x19:
+                    case 0x1A:
+                    case 0x1B:
+                    case 0x1C:
+                    case 0x1D:
+                    case 0x1E:
+                    case 0x1F:
+                    case 0x20:
+                    case 0x21:
+                    case 0x22:
+                    case 0x23:
+                    case 0x24:
+                    case 0x25:
+                    case 0x26:
+                    case 0x27:
+                    case 0x28:
+                    case 0x29:
+                    case 0x2A:
+                    case 0x2C:
+                    case 0x2D:
+                    case 0x2E:
+                    case 0x2F:
+                    case 0x30:
+                    case 0x31:
+                    case 0x32:
+                        {
+                            var assetName = instance.Game.GetAssetName(BitConverter.ToInt64(assetBuffer, property.Item2), instance, property.Item3 == 0x10 ? 0xF8 : 0);
+                            asset[property.Item1] = assetName;
+                            break;
+                        }
+                    default:
+                        {
+                            // Attempt to use the extended data handler, otherwise null
+                            var result = extendedDataHandler?.Invoke(asset, assetBuffer, property.Item2, property.Item3, instance);
+
+                            if (result != null)
+                            {
+                                asset[property.Item1] = result;
+                            }
+                            else
+                            {
+                                asset[property.Item1] = "";
+#if DEBUG
+                                Console.WriteLine("Unknown Value: {0} - {1} - {2}", property.Item3, property.Item2, property.Item1);
+#endif
+                            }
+                            // Done
+                            break;
+                        }
+                }
+
+                //assetBuffer[property.Item2] = 0xAF;
+            }
+
+            // Done
+            return asset;
         }
     }
 }

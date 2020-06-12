@@ -64,22 +64,24 @@ namespace HydraX.Library
             /// <summary>
             /// Loads Assets from this Asset Pool
             /// </summary>
-            public List<GameAsset> Load(HydraInstance instance)
+            public List<Asset> Load(HydraInstance instance)
             {
-                var results = new List<GameAsset>();
+                var results = new List<Asset>();
 
-                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 0x20));
+                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.AssetPoolsAddress + (Index * 0x20));
 
                 StartAddress = poolInfo.PoolPointer;
                 AssetSize = poolInfo.AssetSize;
                 AssetCount = poolInfo.PoolSize;
 
-                results.Add(new GameAsset()
+                results.Add(new Asset()
                 {
-                    Name = "localizedstrings.str",
-                    HeaderAddress = poolInfo.PoolPointer,
-                    AssetPool = this,
-                    Type = Name,
+                    Name        = "localizedstrings.str",
+                    Type        = Name,
+                    Status      = "Loaded",
+                    Data        = poolInfo.PoolPointer,
+                    Zone        = "none",
+                    LoadMethod  = ExportAsset,
                     Information = "N/A"
                 });
 
@@ -89,7 +91,7 @@ namespace HydraX.Library
             /// <summary>
             /// Exports the given asset from this pool
             /// </summary>
-            public HydraStatus Export(GameAsset asset, HydraInstance instance)
+            public void ExportAsset(Asset asset, HydraInstance instance)
             {
                 string path = Path.Combine(instance.ExportFolder, asset.Name);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
@@ -114,15 +116,15 @@ namespace HydraX.Library
                     }
                 }
 
-                return HydraStatus.Success;
+                return;
             }
 
             /// <summary>
             /// Checks if the given asset is a null slot
             /// </summary>
-            public bool IsNullAsset(GameAsset asset)
+            public bool IsNullAsset(Asset asset)
             {
-                return IsNullAsset(asset.NameLocation);
+                return IsNullAsset((long)asset.Data);
             }
 
             /// <summary>

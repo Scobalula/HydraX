@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // ------------------------------------------------------------------------
 using System.ComponentModel;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
 using HydraX.Library;
@@ -25,19 +26,12 @@ namespace HydraX
     /// <summary>
     /// Main View Model Class
     /// </summary>
-    public class MainViewModel : INotifyPropertyChanged
+    public class MainViewModel : Notifiable
     {
-        #region BackingVariables
         /// <summary>
-        /// Gets or Sets the Filter String
+        /// Gets the Search Query
         /// </summary>
-        private string BackingFilterString { get; set; }
-
-        /// <summary>
-        /// Gets or Sets the Filter Strings
-        /// </summary>
-        private string[] FilterStrings { get; set; }
-        #endregion
+        public SearchQuery Query { get; } = new SearchQuery();
 
         /// <summary>
         /// Gets or Sets the filter string
@@ -46,16 +40,15 @@ namespace HydraX
         {
             get
             {
-                return BackingFilterString;
+                return GetValue<string>("FilterString");
             }
             set
             {
-                if (value != BackingFilterString)
+                if (value != GetValue<string>("FilterString"))
                 {
-                    BackingFilterString = value;
-                    FilterStrings = string.IsNullOrWhiteSpace(BackingFilterString) ? null : BackingFilterString.Split(' ');
+                    SetValue(value, "FilterString");
+                    Query.Update(value);
                     AssetsView.Refresh();
-                    OnPropertyChanged("FilterString");
                 }
             }
         }
@@ -68,12 +61,40 @@ namespace HydraX
         /// <summary>
         /// Gets the observable collection of assets
         /// </summary>
-        public AssetList Assets { get; } = new AssetList();
+        public UIItemList<Asset> Assets { get; } = new UIItemList<Asset>();
 
         /// <summary>
-        /// Property Changed Event
+        /// Gets or Sets the Dimmer Visibility
         /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
+        public Visibility DimmerVisibility
+        {
+            get
+            {
+                return GetValue<Visibility>("DimmerVisibility");
+            }
+            set
+            {
+                SetValue(value, "DimmerVisibility");
+            }
+        }
+
+        /// <summary>
+        /// Gets or Sets whether or not something is being loaded
+        /// </summary>
+        public bool AssetButtonsEnabled
+        {
+            get
+            {
+                return GetValue<bool>(true, "AssetButtonsEnabled");
+            }
+            set
+            {
+                SetValue(value, "AssetButtonsEnabled");
+            }
+        }
+
+        public string Title { get; } = "HydraX";
+
 
         public SolidColorBrush High = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFFFF"));
 
@@ -83,46 +104,14 @@ namespace HydraX
         public MainViewModel()
         {
             AssetsView = CollectionViewSource.GetDefaultView(Assets);
+
             AssetsView.Filter = delegate (object obj)
             {
-                // TODO: Optimize this for Greyhound, parse search string into an object we can utilize
-                if (FilterStrings != null && FilterStrings.Length > 0 && obj is GameAsset asset)
-                {
-                    var assetName = asset.Name.ToLower();
-                    var assetType = asset.Type.ToLower();
-                    var result    = true;
-
-                    foreach (var filterString in FilterStrings)
-                    {
-                        if (filterString.StartsWith("type:"))
-                        {
-                            result = assetType.Contains(filterString.Replace("type:", "").ToLower());
-                        }
-
-                        if(result)
-                        {
-                            if (!string.IsNullOrWhiteSpace(filterString) && !filterString.StartsWith("type:"))
-                                result = assetName.Contains(filterString.ToLower());
-                        }
-
-                        if (result)
-                            break;
-                    }
-
-                    return result;
-                }
+                if (obj is Asset asset)
+                    return asset.CompareToSearch(Query);
 
                 return true;
             };
-        }
-
-        /// <summary>
-        /// Updates the Property on Change
-        /// </summary>
-        /// <param name="name">Property Name</param>
-        protected void OnPropertyChanged(string name)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
     }
 }

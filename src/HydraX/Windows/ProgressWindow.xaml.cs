@@ -1,6 +1,6 @@
 ﻿// ------------------------------------------------------------------------
-// HydraX - Black Ops III Asset Decompiler
-// Copyright (C) 2019 Philip/Scobalula
+// Rottweiler - Fast File Image/Sound Extractor for CoD
+// Copyright (C) 2018 Philip/Scobalula
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,8 +16,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // ------------------------------------------------------------------------
 using System;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
-using System.Windows.Controls;
 
 namespace HydraX
 {
@@ -27,79 +28,119 @@ namespace HydraX
     public partial class ProgressWindow : Window
     {
         /// <summary>
-        /// Whether we cancelled or not
+        /// Gets the Progress Window View Model
         /// </summary>
-        private bool HasCancelled = false;
+        private ProgressWindowViewModel ViewModel { get; } = new ProgressWindowViewModel();
+
+        /// <summary>
+        /// Gets or Sets the Background Worker
+        /// </summary>
+        public BackgroundWorker Worker { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the Worker Args
+        /// </summary>
+        public object Data { get; set; }
 
         /// <summary>
         /// Initializes Progress Window
         /// </summary>
-        public ProgressWindow()
+        public ProgressWindow(DoWorkEventHandler work, ProgressChangedEventHandler changed, RunWorkerCompletedEventHandler complete, string message, object data, double count, Window owner)
         {
             InitializeComponent();
+
+            // Init Worker
+            Worker = new BackgroundWorker
+            {
+                WorkerSupportsCancellation = true,
+                WorkerReportsProgress = true,
+            };
+
+            Worker.ProgressChanged += ProgressChanged;
+            Worker.RunWorkerCompleted += ProgressComplete;
+
+            if (work != null)
+                Worker.DoWork += work;
+            if (changed != null)
+                Worker.ProgressChanged += changed;
+            if (complete != null)
+                Worker.RunWorkerCompleted += complete;
+
+            // Set up initial data
+            DataContext = ViewModel;
+            Owner = owner;
+            Data = data;
+            ViewModel.Count = count;
+            ViewModel.Value = 0;
+            ViewModel.Text = message;
+            ViewModel.RightButtonText = "Cancel";
+            ViewModel.OpenExportFolderVisibility = Visibility.Hidden;
+
+            // We only need to run the worker once loaded
+            Loaded += StartWorker;
+        }
+
+        /// <summary>
+        /// Starts the worker 
+        /// </summary>
+        private void StartWorker(object sender, RoutedEventArgs e)
+        {
+            Worker.RunWorkerAsync(this);
+        }
+
+        /// <summary>
+        /// Handles on progress complete
+        /// </summary>
+        private void ProgressComplete(object sender, RunWorkerCompletedEventArgs e)
+        {
+            ViewModel.OpenExportFolderVisibility = Visibility.Visible;
+            ViewModel.RightButtonText = "Close";
+            ViewModel.Text = "Complete";
+            ViewModel.Value = ViewModel.Count;
+        }
+
+        /// <summary>
+        /// Updates bar on progress changed
+        /// </summary>
+        private void ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            if (!Worker.CancellationPending)
+            {
+                if (e.UserState != null)
+                    ViewModel.Text = e.UserState?.ToString();
+                ViewModel.Indeterminate = e.ProgressPercentage < 0;
+                ViewModel.Value++;
+            }
         }
 
         /// <summary>
         /// Sets Cancelled to true to update current task
         /// </summary>
-        private void WindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void WindowClosing(object sender, CancelEventArgs e)
         {
-            e.Cancel = !HasCancelled;
+            e.Cancel = Worker.IsBusy;
         }
 
         /// <summary>
         /// Closes Window on Cancel click
         /// </summary>
-        private void CancelClick(object sender, RoutedEventArgs e)
+        private void RightButtonClick(object sender, RoutedEventArgs e)
         {
-            HasCancelled = true;
+            if(Worker.IsBusy)
+            {
+                ViewModel.Text = "Cancelling task...";
+                Worker?.CancelAsync();
+            }
+            else
+            {
+                Close();
+            }
         }
 
-        /// <summary>
-        /// Closes Progress Window on Complete
-        /// </summary>
-        public void Complete()
+        private void OpenExportFolderClick(object sender, RoutedEventArgs e)
         {
-            ProgressBar.Value = ProgressBar.Maximum;
-            TaskBarProgress.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
-            TaskBarProgress.ProgressValue = 0;
-            HasCancelled = true;
+            Process.Start("exported_files");
             Close();
-        }
-
-        public void SetProgressCount(double value)
-        {
-            // Invoke dispatcher to update UI
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                ProgressBar.Maximum = value;
-                ProgressBar.Value = 0;
-                TaskBarProgress.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Indeterminate;
-            }));
-        }
-
-        public void SetProgressMessage(string value)
-        {
-            // Invoke dispatcher to update UI
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                Message.Content = value;
-            }));
-        }
-
-        /// <summary>
-        /// Update Progress and checks for cancel
-        /// </summary>
-        public bool IncrementProgress()
-        {
-            // Invoke dispatcher to update UI
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                ProgressBar.Value++;
-            }));
-
-            // Return whether we've cancelled or not
-            return HasCancelled;
         }
     }
 }

@@ -2,36 +2,36 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="HydraX" 
-        Background="#FF04396C" 
         Width="960" Height="540" 
-        MinWidth="640" MinHeight="360" 
+        MinWidth="640" MinHeight="360"
+        Background="#FF383838"
+        Style="{StaticResource WindowStyle}"
         Closing="MainWindowClosing">
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
-        <!-- Side Bar -->
-        <TextBox VerticalContentAlignment="Center" 
+        <!-- Search Box -->
+        <TextBox VerticalContentAlignment="Center"
                  Text="{Binding Path=FilterString, UpdateSourceTrigger=PropertyChanged}" 
-                 Height="28" Margin="41,0,0,0" 
+                 Height="30" Margin="42,0,0,0" 
                  TextWrapping="NoWrap" 
-                 VerticalAlignment="Top" Background="#FF031F4B" BorderBrush="#FF031F4B"/>
+                 VerticalAlignment="Top" Background="#FF242424" BorderBrush="#FF242424"/>
         <!-- Asset List -->
-        <ListView x:Name="AssetList" 
+        <ListView x:Name="AssetList"
                   MouseDoubleClick="AssetListMouseDoubleClick" 
                   VirtualizingStackPanel.IsVirtualizing="True" 
                   VirtualizingStackPanel.VirtualizationMode="Recycling" 
                   AllowDrop="True" 
-                  Margin="41,28,0,0" 
+                  Margin="42,30,0,0" 
                   Foreground="White" 
                   ItemsSource="{Binding Assets}">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Width="384" Header="Name"       DisplayMemberBinding="{Binding DisplayName}"/>
+                    <!-- Name Column -->
+                    <GridViewColumn Width="256" Header="Name"       DisplayMemberBinding="{Binding DisplayName}"/>
+                    <!-- Zone Name Column -->
+                    <GridViewColumn Width="128" Header="Zone"       DisplayMemberBinding="{Binding Zone}"/>
+                    <!-- Asset Type Column -->
                     <GridViewColumn Width="128" Header="Type"       DisplayMemberBinding="{Binding Type}"/>
+                    <!-- Status Column -->
                     <GridViewColumn Width="128" Header="Status">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
@@ -39,18 +39,18 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                    <GridViewColumn Width="224" Header="Info"       DisplayMemberBinding="{Binding Information}"/>
+                    <!-- Info Column -->
+                    <GridViewColumn Width="224" Header="Info"       DisplayMemberBinding="{Binding Information, FallbackValue=N/A}"/>
                 </GridView>
             </ListView.View>
         </ListView>
-        <Button ContentTemplate="{StaticResource OpenMemoryIcon}" ToolTip="Load assets from a supported game's memory." Style="{StaticResource IconButtonStyle}" Click="OpenFileClick"  HorizontalAlignment="Left"  Width="41" Height="41" VerticalAlignment="Top"/>
-        <Button ContentTemplate="{StaticResource ExportAllIcon}" ToolTip="Exports all listed assets in the asset list." Style="{StaticResource IconButtonStyle}" Click="ExportAllClick" HorizontalAlignment="Left"  Width="41" Margin="0,41,0,0" Height="41" VerticalAlignment="Top"/>
-        <Button ContentTemplate="{StaticResource ExportIcon}" ToolTip="Exports selected assets in the asset list." Style="{StaticResource IconButtonStyle}" Click="ExportSelectedClick" HorizontalAlignment="Left"  Width="41" Margin="0,82,0,0" Height="41" VerticalAlignment="Top"/>
-        <Button ContentTemplate="{StaticResource DonateIcon}" ToolTip="Donate to support my caffine addiction and the all thing." Style="{StaticResource IconButtonStyle}" Click="DonateClick" HorizontalAlignment="Left"  Width="41" Height="41" VerticalAlignment="Bottom" Margin="0,0,0,82"/>
-        <Button ContentTemplate="{StaticResource DiscordIcon}" ToolTip="Join my Discord server for discussion and support." Style="{StaticResource IconButtonStyle}" Click="DiscordClick" HorizontalAlignment="Left"  Width="41" Height="40" VerticalAlignment="Bottom" Margin="0,0,0,123"/>
-        <Button ContentTemplate="{StaticResource AboutIcon}" ToolTip="Opens the about window." Style="{StaticResource IconButtonStyle}" Click="AboutClick" HorizontalAlignment="Left"  Width="41" Height="41" VerticalAlignment="Bottom" Margin="0,0,0,41"/>
-        <Button ContentTemplate="{StaticResource SettingsIcon}" ToolTip="Opens the settings window." Style="{StaticResource IconButtonStyle}" Click="SettingsClick" HorizontalAlignment="Left"  Width="41" Height="41" VerticalAlignment="Bottom"/>
-
-        <Rectangle x:Name="Dimmer" Fill="#7F000000" Visibility="Hidden"/>
+        <!-- Side Bar Buttons -->
+        <Button ContentTemplate="{StaticResource OpenMemoryIcon}"   ToolTip="Load assets from a supported game's memory."                   Style="{StaticResource IconButtonStyle}" Click="OpenGameClick"          HorizontalAlignment="Left"  Width="42" Height="42" VerticalAlignment="Top"                              IsEnabled="{Binding AssetButtonsEnabled, FallbackValue=True}"/>
+        <Button ContentTemplate="{StaticResource ExportAllIcon}"    ToolTip="Exports all listed assets in the asset list."                  Style="{StaticResource IconButtonStyle}" Click="ExportAllClick"         HorizontalAlignment="Left"  Width="42" Height="42" VerticalAlignment="Top"      Margin="0,42,0,0"       IsEnabled="{Binding AssetButtonsEnabled, FallbackValue=True}"/>
+        <Button ContentTemplate="{StaticResource ExportIcon}"       ToolTip="Exports selected assets in the asset list."                    Style="{StaticResource IconButtonStyle}" Click="ExportSelectedClick"    HorizontalAlignment="Left"  Width="42" Height="42" VerticalAlignment="Top"      Margin="0,84,0,0"       IsEnabled="{Binding AssetButtonsEnabled, FallbackValue=True}"/>
+        <Button ContentTemplate="{StaticResource DiscordIcon}"      ToolTip="Join my Discord server for discussion and support."            Style="{StaticResource IconButtonStyle}" Click="DiscordClick"           HorizontalAlignment="Left"  Width="42" Height="42" VerticalAlignment="Bottom"   Margin="0,0,0,42"/>
+        <Button ContentTemplate="{StaticResource DonateIcon}"       ToolTip="Donate to support my caffine addiction and the all thing."     Style="{StaticResource IconButtonStyle}" Click="DonateClick"            HorizontalAlignment="Left"  Width="42" Height="42" VerticalAlignment="Bottom"/>
+        <!-- Dimmer -->
+        <Rectangle x:Name="Dimmer" Fill="#7F000000" Visibility="{Binding DimmerVisibility, FallbackValue=Hidden}"/>
     </Grid>
 </Window>

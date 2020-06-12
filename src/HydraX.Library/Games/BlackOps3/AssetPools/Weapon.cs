@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace HydraX.Library
 {
@@ -10,6 +11,14 @@ namespace HydraX.Library
         /// </summary>
         private class Weapon : IAssetPool
         {
+            /// <summary>
+            /// Weapon Asset Structure
+            /// </summary>
+            [StructLayout(LayoutKind.Sequential, Size = 768)]
+            private struct WeaponAssetHeader
+            {
+                public long NamePointer;
+            }
             #region Tables
             /// <summary>
             /// Weapoon Properties and Struct Offsets
@@ -1875,9 +1884,9 @@ namespace HydraX.Library
             };
 
             /// <summary>
-            /// Weapon Offhand Slots
+            /// Weapon Offhand Classes
             /// </summary>
-            private static readonly string[] WeaponOffhandSlots =
+            private static readonly string[] WeaponOffhandClasses =
             {
                "None",
                "Frag Grenade",
@@ -1886,6 +1895,20 @@ namespace HydraX.Library
                "Gear",
                "Supply Drop Marker",
                "Gadget",
+            };
+
+            /// <summary>
+            /// Weapon Offhand Slots
+            /// </summary>
+            private static readonly string[] WeaponOffhandSlots =
+            {
+                "None",
+                "Lethal grenade",
+                "Tactical grenade",
+                "Equipment",
+                "Specific use",
+                "Gadget",
+                "Special"
             };
 
             /// <summary>
@@ -2254,33 +2277,36 @@ namespace HydraX.Library
             /// <summary>
             /// Loads Assets from this Asset Pool
             /// </summary>
-            public List<GameAsset> Load(HydraInstance instance)
+            public List<Asset> Load(HydraInstance instance)
             {
-                var results = new List<GameAsset>();
+                var results = new List<Asset>();
 
-                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 0x20));
+                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.AssetPoolsAddress + (Index * 0x20));
 
                 StartAddress = poolInfo.PoolPointer;
                 AssetSize = poolInfo.AssetSize;
                 AssetCount = poolInfo.PoolSize;
 
-                for(int i = 0; i < AssetCount; i++)
-                {
-                    var address = StartAddress + (i * AssetSize);
-                    var namePointer = instance.Reader.ReadInt64(address);
+                var headers = instance.Reader.ReadArrayUnsafe<WeaponAssetHeader>(StartAddress, AssetCount);
 
-                    if (IsNullAsset(namePointer))
+                for(int i = 0; i < headers.Length; i++)
+                {
+                    var header = headers[i];
+
+                    if (IsNullAsset(header.NamePointer))
                         continue;
 
-                    results.Add(new GameAsset()
+                    var address     = StartAddress + (i * AssetSize);
+
+                    results.Add(new Asset()
                     {
-                        Name = instance.Reader.ReadNullTerminatedString(namePointer),
-                        NameLocation = namePointer,
-                        HeaderAddress = StartAddress + (i * AssetSize),
-                        AssetPool = this,
-                        Size = AssetSize,
-                        Type = Name,
-                        Information = "N/A"
+                        Name        = instance.Reader.ReadNullTerminatedString(header.NamePointer),
+                        Type        = Name,
+                        Zone        = ((BlackOps3)instance.Game).ZoneNames[address],
+                        Information = "N/A",
+                        Status      = "Loaded",
+                        Data        = address,
+                        LoadMethod  = ExportAsset,
                     });
                 }
 
@@ -2290,40 +2316,44 @@ namespace HydraX.Library
             /// <summary>
             /// Exports the given asset from this pool
             /// </summary>
-            public HydraStatus Export(GameAsset asset, HydraInstance instance)
+            public void ExportAsset(Asset asset, HydraInstance instance)
             {
-                var buffer = instance.Reader.ReadBytes(asset.HeaderAddress, asset.Size);
+                var buffer = instance.Reader.ReadBytes((long)asset.Data, AssetSize);
 
-                if (asset.Name != instance.Reader.ReadNullTerminatedString(BitConverter.ToInt64(buffer, 0)))
-                    return HydraStatus.MemoryChanged;
-
-                var assetBuffer = new byte[0xFFFF];
+                // Buffer of entire size Linker allocates
+                var assetBuffer = new byte[0x2970];
 
                 // Start by stitching the asset together so we can deal with a large buffer,
                 // linker generates it in this fashion, but once loaded into memory, it's split into
                 // sections with pointers
-                // Base XAsset
-                Array.Copy(buffer, 0, assetBuffer, 0, buffer.Length);
-                //// Animation Table
-                Array.Copy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 0x48), 0x628), 0, assetBuffer, 0x2050, 0x628);
-                // Weapon Settings (and more pointers....)
-                Array.Copy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 0x18), 0x15F0), 0, assetBuffer, 0x300, 0x15F0);
-                // ACV Table
-                Array.Copy(instance.Reader.ReadBytes(BitConverter.ToInt64(assetBuffer, 0x360), 0x160), 0, assetBuffer, 0x18f0, 0x160);
-                // Projectile Settings
-                Array.Copy(instance.Reader.ReadBytes(BitConverter.ToInt64(assetBuffer, 0x1498), 0xA0), 0, assetBuffer, 0x2798, 0xA0);
-                Array.Copy(instance.Reader.ReadBytes(BitConverter.ToInt64(assetBuffer, 0x14A0), 0xA8), 0, assetBuffer, 0x2838, 0xA0);
-                // Hide Tags
-                Array.Copy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 0x50), 0x80), 0, assetBuffer, 0x2678, 0x80);
-                // Attachment Data (View/World Model Model Pointers/Tags)
-                Array.Copy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 0x58), 0x28), 0, assetBuffer, 0x26f8, 0x28);
-                Array.Copy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 0x60), 0x28), 0, assetBuffer, 0x2720, 0x28);
-                Array.Copy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 0x68), 0x28), 0, assetBuffer, 0x2748, 0x28);
-                Array.Copy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 0x70), 0x28), 0, assetBuffer, 0x2770, 0x28);
-                //// Location Multipliers
-                Array.Copy(instance.Reader.ReadBytes(BitConverter.ToInt64(assetBuffer, 0x16B0), 84), 0, assetBuffer, 0x28d8, 84);
 
-                var result = GameDataTable.ConvertStructToGDTAsset(assetBuffer, WeaponOffsets, instance, HandleAttachmentSettings);
+                // XAsset Buffer
+                Buffer.BlockCopy(buffer, 0, assetBuffer, 0, buffer.Length);
+                // Weapon Settings
+                Buffer.BlockCopy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 24),          5161),          0, assetBuffer,         768,            5161);
+                // Attachments (Not needed, just here for clarity and if ever needed, set by the AUs)
+                Buffer.BlockCopy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 56),          512),           0, assetBuffer,         6736,           512);
+                // Attachment Uniques (Not needed, just here for clarity and if ever needed, set Attachment Unique Base in APE)
+                Buffer.BlockCopy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 56),          1024),          0, assetBuffer,         7248,           1024);
+                // Animations
+                Buffer.BlockCopy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 72),          1576),          0, assetBuffer,         8272,           1576);
+                // Hide Tags
+                Buffer.BlockCopy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 80),          128),           0, assetBuffer,         9848,           128);
+                // Attachment Data (View/World Model Model Pointers/Tags)
+                Buffer.BlockCopy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 88),          48),            0, assetBuffer,         9976,           48);
+                Buffer.BlockCopy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 96),          48),            0, assetBuffer,         10016,          48);
+                Buffer.BlockCopy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 104),         48),            0, assetBuffer,         10056,          48);
+                Buffer.BlockCopy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 112),         48),            0, assetBuffer,         10096,          48);
+                // Attachment Cosmetic Variants
+                Buffer.BlockCopy(instance.Reader.ReadBytes(BitConverter.ToInt64(assetBuffer, 768 + 96),   352),       0, assetBuffer,         6384,           352);
+                // Projectile Settings (Parallel/Perpendicular)
+                Buffer.BlockCopy(instance.Reader.ReadBytes(BitConverter.ToInt64(assetBuffer, 768 + 4504), 160),       0, assetBuffer,         10136,          160);
+                Buffer.BlockCopy(instance.Reader.ReadBytes(BitConverter.ToInt64(assetBuffer, 768 + 4512), 160),       0, assetBuffer,         10296,          160);
+                // Damage Multipliers
+                Buffer.BlockCopy(instance.Reader.ReadBytes(BitConverter.ToInt64(assetBuffer, 768 + 5040), 84),        0, assetBuffer,         10456,          84);
+
+                // Now pass to the asset converter
+                var result = ConvertAssetBufferToGDTAsset(assetBuffer, WeaponOffsets, instance, HandleSpecialWeaponsFields);
 
                 var weaponType = (string)result["weaponType"];
                 var isDualWield = (byte)result["dualWield"] == 1;
@@ -2360,16 +2390,14 @@ namespace HydraX.Library
                     result.Type = weaponType + "weapon";
                 }
 
-                // Add to GDT
-                instance.GDTs["Weapon"][asset.Name] = result;
-
-                return HydraStatus.Success;
+                result.Name = asset.Name;
+                instance.AddGDTAsset(result, result.Type, result.Name);
             }
 
             /// <summary>
             /// Handles Weapon Specific Settings
             /// </summary>
-            private static object HandleAttachmentSettings(byte[] assetBuffer, int offset, int type, HydraInstance instance)
+            private static object HandleSpecialWeaponsFields(GameDataTable.Asset asset, byte[] assetBuffer, int offset, int type, HydraInstance instance)
             {
                 switch (type)
                 {
@@ -2390,6 +2418,7 @@ namespace HydraX.Library
                     case 0x3A:
                         return WeaponProjectileExplosionTypes[BitConverter.ToInt32(assetBuffer, offset)];
                     case 0x3B:
+                        return WeaponOffhandClasses[BitConverter.ToInt32(assetBuffer, offset)];
                     case 0x3C:
                         return WeaponOffhandSlots[BitConverter.ToInt32(assetBuffer, offset)];
                     case 0x3D:
@@ -2453,14 +2482,6 @@ namespace HydraX.Library
                             return null;
                         }
                 }
-            }
-
-            /// <summary>
-            /// Checks if the given asset is a null slot
-            /// </summary>
-            public bool IsNullAsset(GameAsset asset)
-            {
-                return IsNullAsset(asset.NameLocation);
             }
 
             /// <summary>

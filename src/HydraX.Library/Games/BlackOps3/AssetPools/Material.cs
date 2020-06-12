@@ -285,7 +285,7 @@ namespace HydraX.Library
             /// <summary>
             /// Gets or Sets the End Address
             /// </summary>
-            public long EndAddress { get { return StartAddress + (AssetCount * AssetSize); } set => throw new NotImplementedException(); }
+            public long EndAddress { get; set; }
 
             /// <summary>
             /// Gets the Name of this Pool
@@ -305,30 +305,35 @@ namespace HydraX.Library
             /// <summary>
             /// Loads Assets from this Asset Pool
             /// </summary>
-            public List<GameAsset> Load(HydraInstance instance)
+            public List<Asset> Load(HydraInstance instance)
             {
-                var results = new List<GameAsset>();
+                var results = new List<Asset>();
 
-                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 0x20));
+                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.AssetPoolsAddress + (Index * 0x20));
 
                 StartAddress = poolInfo.PoolPointer;
                 AssetSize = poolInfo.AssetSize;
                 AssetCount = poolInfo.PoolSize;
+                EndAddress = StartAddress + (AssetCount * AssetSize);
 
-                for(int i = 0; i < AssetCount; i++)
+                for (int i = 0; i < AssetCount; i++)
                 {
                     var header = instance.Reader.ReadStruct<MaterialAsset>(StartAddress + (i * AssetSize));
 
                     if (IsNullAsset(header.NamePointer))
                         continue;
 
-                    results.Add(new GameAsset()
+                    var address = StartAddress + (i * AssetSize);
+
+                    results.Add(new Asset()
                     {
-                        Name = Path.GetFileNameWithoutExtension(instance.Reader.ReadNullTerminatedString(header.NamePointer).Split('|')[0]),
-                        HeaderAddress = StartAddress + (i * AssetSize),
-                        AssetPool = this,
-                        Type = Name,
-                        Information = string.Format("Type: {0}", Path.GetFileNameWithoutExtension(instance.Reader.ReadNullTerminatedString(instance.Reader.ReadInt64(header.TechniquePointer)).Split('#')[0]))
+                        Name        = instance.Reader.ReadNullTerminatedString(header.NamePointer).Split('|')[0],
+                        Type        = Name,
+                        Zone        = ((BlackOps3)instance.Game).ZoneNames[address],
+                        Information = "N/A",
+                        Status      = "Loaded",
+                        Data        = address,
+                        LoadMethod  = ExportAsset,
                     });
                 }
 
@@ -338,22 +343,18 @@ namespace HydraX.Library
             /// <summary>
             /// Exports the given asset from this pool
             /// </summary>
-            public HydraStatus Export(GameAsset asset, HydraInstance instance)
+            public void ExportAsset(Asset asset, HydraInstance instance)
             {
-                var header = instance.Reader.ReadStruct<MaterialAsset>(asset.HeaderAddress);
+                var header = instance.Reader.ReadStruct<MaterialAsset>((long)asset.Data);
 
-                if (asset.Name != Path.GetFileNameWithoutExtension(instance.Reader.ReadNullTerminatedString(header.NamePointer).Split('|')[0]))
-                    return HydraStatus.MemoryChanged;
+                if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                    throw new Exception("The asset at the expect memory address has changed. Press the Load Game button to refresh the asset list.");
 
-                foreach(var result in ExportMTL(header, instance))
+                foreach (var result in ExportMTL(header, instance))
                 {
-                    if (!instance.ExistsInGDTDB(result.Name))
-                    {
-                        instance.GDTs["Material"][result.Name] = result;
-                    }
+                    result.Name = asset.Name;
+                    instance.AddGDTAsset(result, result.Type, result.Name);
                 }
-
-                return HydraStatus.Success;
             }
 
             /// <summary>
@@ -636,14 +637,6 @@ namespace HydraX.Library
                 }
 
                 return null;
-            }
-
-            /// <summary>
-            /// Checks if the given asset is a null slot
-            /// </summary>
-            public bool IsNullAsset(GameAsset asset)
-            {
-                return IsNullAsset(asset.NameLocation);
             }
 
             /// <summary>

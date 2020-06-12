@@ -17,17 +17,17 @@ namespace HydraX.Library
         /// <summary>
         /// Gets the Memory Addresses of the Asset Pools
         /// </summary>
-        long[] AssetPoolsAddresses { get; }
+        long AssetPoolsAddress { get; }
 
         /// <summary>
         /// Gets the Memory Addresses of the Asset Sizes
         /// </summary>
-        long[] AssetSizesAddresses { get; }
+        long AssetSizesAddress { get; }
 
         /// <summary>
-        /// Gets the Memory Addresses of the String Table
+        /// Gets the Memory Addresses of the String Pool
         /// </summary>
-        long[] StringTableAddresses { get; }
+        long StringPoolAddress { get; }
 
         /// <summary>
         /// Gets or Sets the Base Address
@@ -45,10 +45,15 @@ namespace HydraX.Library
         List<IAssetPool> AssetPools { get; set; }
 
         /// <summary>
+        /// Gets or Sets the Zone Names for each asset
+        /// </summary>
+        Dictionary<long, string> ZoneNames { get; set; }
+
+        /// <summary>
         /// Validates the games addresses
         /// </summary>
         /// <returns>True if the addresses are valid, otherwise false</returns>
-        bool ValidateAddresses(HydraInstance instance);
+        bool Initialize(HydraInstance instance);
 
         /// <summary>
         /// Gets a string from the string table in the game's memory

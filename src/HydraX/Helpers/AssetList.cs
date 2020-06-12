@@ -1,60 +1,72 @@
 ﻿// ------------------------------------------------------------------------
 // HydraX - Black Ops III Asset Decompiler
-// Copyright (C) 2019 Philip/Scobalula
-//
+// Copyright (C) 2020 Philip/Scobalula
+// ------------------------------------------------------------------------
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-
+// ------------------------------------------------------------------------
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-
+// ------------------------------------------------------------------------
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // ------------------------------------------------------------------------
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Collections.Generic;
-using HydraX.Library;
+using System.IO;
 
 namespace HydraX
 {
     /// <summary>
-    /// A class to hold an Asset List
+    /// A class to hold a UI Item List
     /// </summary>
-    public class AssetList : ObservableCollection<GameAsset>
+    public class UIItemList<T> : ObservableCollection<T>
     {
         /// <summary>
-        /// Gets or Sets if we are loading assets
+        /// Gets or Sets if we should notify
         /// </summary>
-        private bool Loading = false;
+        public bool Notify { get; set; }
 
         /// <summary>
-        /// Adds assets to the UI without notfying each time
+        /// Initializes a new instance of the UI Item List
         /// </summary>
-        /// <param name="assets">List of Assets</param>
-        public void AddAssets(IEnumerable<GameAsset> assets)
+        public UIItemList()
         {
-            Loading = true;
-
-            foreach (var asset in assets)
-                Add(asset);
-
-            Loading = false;
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            Notify = true;
         }
 
         /// <summary>
-        /// Clears all loaded assets
+        /// Adds items to the list
         /// </summary>
-        public void ClearAssets()
+        /// <param name="items">List of Items</param>
+        public void AddRange(IEnumerable<T> items)
         {
-            Loading = true;
+            lock (((List<T>)Items))
+            {
+                ((List<T>)Items).AddRange(items);
+            }
+        }
+
+        public void Sort()
+        {
+            ((List<T>)Items).Sort();
+        }
+
+        /// <summary>
+        /// Clears all loaded items
+        /// </summary>
+        public void ClearAllItems()
+        {
             Clear();
-            Loading = false;
+        }
+
+        public void SendNotify()
+        {
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
@@ -64,7 +76,7 @@ namespace HydraX
         /// <param name="e">Args</param>
         protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            if (!Loading)
+            if (Notify)
                 base.OnCollectionChanged(e);
         }
     }

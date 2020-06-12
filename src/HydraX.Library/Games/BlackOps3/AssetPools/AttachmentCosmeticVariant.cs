@@ -135,11 +135,11 @@ namespace HydraX.Library
             /// <summary>
             /// Loads Assets from this Asset Pool
             /// </summary>
-            public List<GameAsset> Load(HydraInstance instance)
+            public List<Asset> Load(HydraInstance instance)
             {
-                var results = new List<GameAsset>();
+                var results = new List<Asset>();
 
-                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 0x20));
+                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.AssetPoolsAddress + (Index * 0x20));
 
                 StartAddress = poolInfo.PoolPointer;
                 AssetSize = poolInfo.AssetSize;
@@ -152,12 +152,16 @@ namespace HydraX.Library
                     if (IsNullAsset(header.NamePointer))
                         continue;
 
-                    results.Add(new GameAsset()
+                    var address = StartAddress + (i * AssetSize);
+
+                    results.Add(new Asset()
                     {
                         Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
-                        HeaderAddress = StartAddress + (i * AssetSize),
-                        AssetPool = this,
                         Type = Name,
+                        Status = "Loaded",
+                        Data = address,
+                        Zone = ((BlackOps3)instance.Game).ZoneNames[address],
+                        LoadMethod = ExportAsset,
                         Information = "N/A"
                     });
                 }
@@ -168,12 +172,12 @@ namespace HydraX.Library
             /// <summary>
             /// Exports the given asset from this pool
             /// </summary>
-            public HydraStatus Export(GameAsset asset, HydraInstance instance)
+            public void ExportAsset(Asset asset, HydraInstance instance)
             {
-                var header = instance.Reader.ReadStruct<AttachmentCosmeticVariantAsset>(asset.HeaderAddress);
+                var header = instance.Reader.ReadStruct<AttachmentCosmeticVariantAsset>((long)asset.Data);
 
                 if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
-                    return HydraStatus.FailedToFindGame;
+                    throw new Exception("The asset at the expect memory address has changed. Press the Load Game button to refresh the asset list.");
 
                 var result = new GameDataTable.Asset(asset.Name, "attachmentcosmeticvariant");
 
@@ -200,18 +204,19 @@ namespace HydraX.Library
                     result[string.Format("acv{0}_uiMaterial", i)]       = instance.Game.GetAssetName(variants[i].MaterialPointer, instance, 0xF8);
                 }
 
-                instance.GDTs["Weapon"][asset.Name] = result;
+                result.Name = asset.Name;
+                instance.AddGDTAsset(result, result.Type, result.Name);
 
                 // Done
-                return HydraStatus.Success;
+                return;
             }
 
             /// <summary>
             /// Checks if the given asset is a null slot
             /// </summary>
-            public bool IsNullAsset(GameAsset asset)
+            public bool IsNullAsset(Asset asset)
             {
-                return IsNullAsset(asset.NameLocation);
+                return IsNullAsset((long)asset.Data);
             }
 
             /// <summary>

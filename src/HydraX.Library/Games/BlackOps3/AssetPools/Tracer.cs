@@ -91,11 +91,11 @@ namespace HydraX.Library
             /// <summary>
             /// Loads Assets from this Asset Pool
             /// </summary>
-            public List<GameAsset> Load(HydraInstance instance)
+            public List<Asset> Load(HydraInstance instance)
             {
-                var results = new List<GameAsset>();
+                var results = new List<Asset>();
 
-                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 0x20));
+                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.AssetPoolsAddress + (Index * 0x20));
 
                 StartAddress = poolInfo.PoolPointer;
                 AssetSize = poolInfo.AssetSize;
@@ -109,15 +109,15 @@ namespace HydraX.Library
                     if (IsNullAsset(namePointer))
                         continue;
 
-                    results.Add(new GameAsset()
+                    results.Add(new Asset()
                     {
-                        Name = instance.Reader.ReadNullTerminatedString(namePointer),
-                        NameLocation = namePointer,
-                        HeaderAddress = StartAddress + (i * AssetSize),
-                        AssetPool = this,
-                        Size = AssetSize,
-                        Type = Name,
-                        Information = "N/A"
+                        Name        = instance.Reader.ReadNullTerminatedString(namePointer),
+                        Type        = Name,
+                        Zone        = ((BlackOps3)instance.Game).ZoneNames[address],
+                        Information = "N/A",
+                        Status      = "Loaded",
+                        Data        = address,
+                        LoadMethod  = ExportAsset,
                     });
                 }
 
@@ -127,26 +127,26 @@ namespace HydraX.Library
             /// <summary>
             /// Exports the given asset from this pool
             /// </summary>
-            public HydraStatus Export(GameAsset asset, HydraInstance instance)
+            public void ExportAsset(Asset asset, HydraInstance instance)
             {
-                var buffer = instance.Reader.ReadBytes(asset.HeaderAddress, asset.Size);
+                var buffer = instance.Reader.ReadBytes((long)asset.Data, AssetSize);
 
                 if (asset.Name != instance.Reader.ReadNullTerminatedString(BitConverter.ToInt64(buffer, 0)))
-                    return HydraStatus.MemoryChanged;
+                    throw new Exception("The asset at the expect memory address has changed. Press the Load Game button to refresh the asset list.");
 
-                var result = GameDataTable.ConvertStructToGDTAsset(buffer, TracerOffsets, instance, HandleLaserSettings);
+                var result = ConvertAssetBufferToGDTAsset(buffer, TracerOffsets, instance, HandleLaserSettings);
 
                 result.Type = "tracer";
+                result.Name = asset.Name;
+                instance.AddGDTAsset(result, result.Type, result.Name);
 
-                instance.GDTs["Weapon"][asset.Name] = result;
-
-                return HydraStatus.Success;
+                return;
             }
 
             /// <summary>
             /// Handles Laser Specific Settings
             /// </summary>
-            private static object HandleLaserSettings(byte[] assetBuffer, int offset, int type, HydraInstance instance)
+            private static object HandleLaserSettings(GameDataTable.Asset asset, byte[] assetBuffer, int offset, int type, HydraInstance instance)
             {
                 switch (type)
                 {
@@ -157,14 +157,6 @@ namespace HydraX.Library
                     default:
                         return null;
                 }
-            }
-
-            /// <summary>
-            /// Checks if the given asset is a null slot
-            /// </summary>
-            public bool IsNullAsset(GameAsset asset)
-            {
-                return IsNullAsset(asset.NameLocation);
             }
 
             /// <summary>

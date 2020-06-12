@@ -17,18 +17,7 @@ namespace HydraX.Library
         /// <summary>
         /// Hydra GDTs
         /// </summary>
-        public Dictionary<string, GameDataTable> GDTs = new Dictionary<string, GameDataTable>()
-        {
-            { "AI",                 new GameDataTable() },
-            { "Character",          new GameDataTable() },
-            { "Misc",               new GameDataTable() },
-            { "XCams",              new GameDataTable() },
-            { "Table",              new GameDataTable() },
-            { "Physic",             new GameDataTable() },
-            { "Weapon",             new GameDataTable() },
-            { "Material",           new GameDataTable() },
-            { "XModel",             new GameDataTable() },
-        };
+        private Dictionary<string, GameDataTable> GDTs = new Dictionary<string, GameDataTable>();
 
         /// <summary>
         /// Material Technique Cache
@@ -58,7 +47,7 @@ namespace HydraX.Library
         /// <summary>
         /// Gets or Sets the loaded Assets
         /// </summary>
-        public List<GameAsset> Assets { get; set; }
+        public List<Asset> Assets { get; set; }
 
         /// <summary>
         /// Gets the Export Path
@@ -127,66 +116,49 @@ namespace HydraX.Library
         /// </summary>
         public void RefreshGDTDB()
         {
-            try
+            if (Settings["CheckGDTDB", "Yes"] == "Yes")
             {
-                var toolsPath = Environment.GetEnvironmentVariable("TA_TOOLS_PATH");
+                try
+                {
+                    var toolsPath = Environment.GetEnvironmentVariable("TA_TOOLS_PATH");
 
-                if (!File.Exists("icudt64r53.dll"))
-                    File.Copy(Path.Combine(toolsPath, "bin\\icudt64r53.dll"), "icudt64r53.dll", true);
-                if (!File.Exists("icuin64r53.dll"))
-                    File.Copy(Path.Combine(toolsPath, "bin\\icuin64r53.dll"), "icuin64r53.dll", true);
-                if (!File.Exists("icuuc64r53.dll"))
-                    File.Copy(Path.Combine(toolsPath, "bin\\icuuc64r53.dll"), "icuuc64r53.dll", true);
-                if (!File.Exists("sqlite64r.dll"))
-                    File.Copy(Path.Combine(toolsPath, "bin\\sqlite64r.dll"), "sqlite64r.dll", true);
+                    if (!File.Exists("icudt64r53.dll"))
+                        File.Copy(Path.Combine(toolsPath, "bin\\icudt64r53.dll"), "icudt64r53.dll", true);
+                    if (!File.Exists("icuin64r53.dll"))
+                        File.Copy(Path.Combine(toolsPath, "bin\\icuin64r53.dll"), "icuin64r53.dll", true);
+                    if (!File.Exists("icuuc64r53.dll"))
+                        File.Copy(Path.Combine(toolsPath, "bin\\icuuc64r53.dll"), "icuuc64r53.dll", true);
+                    if (!File.Exists("sqlite64r.dll"))
+                        File.Copy(Path.Combine(toolsPath, "bin\\sqlite64r.dll"), "sqlite64r.dll", true);
 
-                // Create and open the SQL Connection
-                var connection = new SQLiteConnection(@"data source=" + Path.Combine(toolsPath, "gdtdb\\gdt.db"));
-                connection.Open();
+                    // Create and open the SQL Connection
+                    var connection = new SQLiteConnection(@"data source=" + Path.Combine(toolsPath, "gdtdb\\gdt.db"));
+                    connection.Open();
 
-                // Create Command
-                var command = new SQLiteCommand("SELECT name FROM _entity;", connection);
+                    // Create Command
+                    var command = new SQLiteCommand("SELECT name FROM _entity;", connection);
 
-                // Execute the Read
-                var reader = command.ExecuteReader();
+                    // Execute the Read
+                    var reader = command.ExecuteReader();
 
-                // Loop all assets
-                while (reader.Read())
-                    GDTDatabase.Add(reader["name"].ToString().Split('/').Last());
+                    // Loop all assets
+                    while (reader.Read())
+                        GDTDatabase.Add(reader["name"].ToString().Split('/').Last());
+                }
+                catch { }
             }
-            catch { }
         }
 
         /// <summary>
         /// Checks if the image exists in the GDT DB
         /// </summary>
         /// <param name="name">name of the image</param>
-        public bool ExistsInGDTDB(string name)
+        public bool ExistsInGDTDB(string assetType, string name)
         {
-            if (Settings["CheckGDTDB", "Yes"] == "No")
+            if (Settings["CheckGDTDB", "No"] == "No")
                 return false;
 
             return GDTDatabase.Contains(name);
-        }
-
-        /// <summary>
-        /// Checks to ensure game is running and hasn't changed
-        /// </summary>
-        public HydraStatus ValidateGame()
-        {
-            if (Reader != null && Game != null)
-            {
-                Process[] processes = Process.GetProcessesByName(Game.ProcessNames[Game.ProcessIndex]);
-
-                if (processes.Length == 0)
-                    return HydraStatus.GameClosed;
-                if (processes[0].Id != Reader.ActiveProcess.Id)
-                    return HydraStatus.MemoryChanged;
-
-                return HydraStatus.Success;
-            }
-
-            return HydraStatus.GameClosed;
         }
 
         /// <summary>
@@ -223,8 +195,27 @@ namespace HydraX.Library
             }
         }
 
+        public void AddGDTAsset(GameDataTable.Asset asset, string type, string name)
+        {
+            lock(GDTs)
+            {
+                if (ExistsInGDTDB(type, name))
+                    return;
+
+                if (!GDTs.TryGetValue(asset.Type, out var gdt))
+                {
+                    gdt = new GameDataTable();
+                    GDTs[asset.Type] = gdt;
+                }
+
+                gdt[type, name] = asset;
+            }
+        }
+
         public void LoadGDTs()
         {
+            GDTs.Clear();
+
             try
             {
                 if (Game != null)
@@ -233,14 +224,15 @@ namespace HydraX.Library
                     {
                         string outputFolder = Path.Combine("exported_files", Game.Name, "source_data", "hydrax_gdts");
 
-                        foreach (var gdt in GDTs)
+                        foreach (var gdt in Directory.GetFiles(outputFolder, "*.gdt"))
                         {
-                            var gdtPath = Path.Combine(outputFolder, gdt.Key.ToLower() + "_assets.gdt");
-
-                            if (File.Exists(gdtPath))
+                            try
                             {
-                                gdt.Value.Assets.Clear();
-                                gdt.Value.Assets = new GameDataTable(gdtPath).Assets;
+                                GDTs[Path.GetFileNameWithoutExtension(gdt).Replace("_assets", "")] = new GameDataTable(gdt);
+                            }
+                            catch
+                            {
+
                             }
                         }
                     }
@@ -267,14 +259,14 @@ namespace HydraX.Library
             Initialize();
         }
 
-        public HydraStatus LoadGame()
+        public void LoadGame()
         {
+            Assets = new List<Asset>();
+
             foreach (var gdt in GDTs)
                 gdt.Value.Assets.Clear();
 
             Process[] processes = Process.GetProcesses();
-
-            var status = HydraStatus.FailedToFindGame;
 
             foreach (var process in processes)
             {
@@ -288,47 +280,35 @@ namespace HydraX.Library
                             Game.ProcessIndex = i;
                             Reader = new ProcessReader(process);
 
-                            if (Game.ValidateAddresses(this))
+                            if (Game.Initialize(this))
                             {
-                                Game.AssetPools = GetAssetPools(Game);
 
-                                Assets = new List<GameAsset>();
+                                Game.AssetPools = GetAssetPools(Game);
 #if DEBUG
                                 // For printing a new support table for the README.md
-                                Console.WriteLine("| {0} | {1} |", "Asset Type".PadRight(32), "Settings Group".PadRight(32));
+                                Console.WriteLine("| {0} |\n|----------------------------------|", "Asset Type".PadRight(32));
 #endif
                                 foreach (var assetPool in Game.AssetPools)
                                 {
-                                    if (Settings["Show" + assetPool.SettingGroup, "Yes"] == "Yes")
-                                    {
 #if DEBUG
-                                        Console.WriteLine("| {0} | {1} |", assetPool.Name.PadRight(32), assetPool.SettingGroup.PadRight(32));
+                                    Console.WriteLine("| {0} |", assetPool.Name.PadRight(32));
 #endif
-                                        Assets.AddRange(assetPool.Load(this));
-                                    }
-#if DEBUG
-                                    else
-                                    {
-                                        Console.WriteLine("Ignoring Pool: {0}", assetPool.Name);
-                                    }
-#endif
+                                    Assets.AddRange(assetPool.Load(this));
                                 }
 
-                                status = HydraStatus.Success;
+                                return;
                             }
                             else
                             {
                                 Clear();
-                                status = HydraStatus.UnsupportedBinary;
+                                throw new GameNotSupportedException(game.Name);
                             }
-
-                            break;
                         }
                     }
                 }
             }
 
-            return status;
+            throw new GameNotFoundException();
         }
     }
 }

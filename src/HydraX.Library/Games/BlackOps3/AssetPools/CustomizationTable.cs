@@ -221,11 +221,11 @@ namespace HydraX.Library
             /// <summary>
             /// Loads Assets from this Asset Pool
             /// </summary>
-            public List<GameAsset> Load(HydraInstance instance)
+            public List<Asset> Load(HydraInstance instance)
             {
-                var results = new List<GameAsset>();
+                var results = new List<Asset>();
 
-                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 0x20));
+                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.AssetPoolsAddress + (Index * 0x20));
 
                 StartAddress = poolInfo.PoolPointer;
                 AssetSize = poolInfo.AssetSize;
@@ -238,12 +238,16 @@ namespace HydraX.Library
                     if (IsNullAsset(header.NamePointer))
                         continue;
 
-                    results.Add(new GameAsset()
+                    var address = StartAddress + (i * AssetSize);
+
+                    results.Add(new Asset()
                     {
                         Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
-                        HeaderAddress = StartAddress + (i * AssetSize),
-                        AssetPool = this,
-                        Type = Name,
+                        Type        = Name,
+                        Status      = "Loaded",
+                        Data        = address,
+                        LoadMethod  = ExportAsset,
+                        Zone = ((BlackOps3)instance.Game).ZoneNames[address],
                         Information = string.Format("Bodies: {0}", header.BodyCount)
                     });
                 }
@@ -254,12 +258,12 @@ namespace HydraX.Library
             /// <summary>
             /// Exports the given asset from this pool
             /// </summary>
-            public HydraStatus Export(GameAsset asset, HydraInstance instance)
+            public void ExportAsset(Asset asset, HydraInstance instance)
             {
-                var header = instance.Reader.ReadStruct<CustomizationTableAsset>(asset.HeaderAddress);
+                var header = instance.Reader.ReadStruct<CustomizationTableAsset>((long)asset.Data);
 
                 if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
-                    return HydraStatus.MemoryChanged;
+                    throw new Exception("The asset at the expect memory address has changed. Press the Load Game button to refresh the asset list.");
 
                 var customizationTable = new GameDataTable.Asset(asset.Name, "charactercustomizationtable");
                 customizationTable["bodyTypeCount"] = header.BodyCount;
@@ -280,7 +284,7 @@ namespace HydraX.Library
 
                     customizationTable["head" + (i + 1).ToString("00")] = playerHead.Name;
 
-                    instance.GDTs["Character"][playerHead.Name] = playerHead;
+                    instance.AddGDTAsset(playerHead, playerHead.Type, playerHead.Name);
                 }
 
                 var playerBodyTypes = instance.Reader.ReadArray<PlayerBodyTypeAsset>(header.BodiesPointer, header.BodyCount);
@@ -383,7 +387,7 @@ namespace HydraX.Library
 
                         playerBodyType["bodyStyle" + (j + 1).ToString("00")] = playerBodyStyle.Name;
 
-                        instance.GDTs["Character"][playerBodyStyle.Name] = playerBodyStyle;
+                        instance.AddGDTAsset(playerBodyStyle, playerBodyStyle.Type, playerBodyStyle.Name);
                     }
 
                     var playerHelmetStyles = instance.Reader.ReadArray<PlayerBodyStyleAsset>(playerBodyTypes[i].HelmetStylesPointer, playerBodyTypes[i].HelmetStyleCount);
@@ -415,7 +419,7 @@ namespace HydraX.Library
 
                         playerBodyType["helmetStyle" + (j + 1).ToString("00")] = playerHelmetStyle.Name;
 
-                        instance.GDTs["Character"][playerHelmetStyle.Name] = playerHelmetStyle;
+                        instance.AddGDTAsset(playerHelmetStyle, playerHelmetStyle.Type, playerHelmetStyle.Name);
                     }
 
                     var dataBlocks = instance.Reader.ReadArray<KVPBlock>(playerBodyTypes[i].DataBlocksPointer, playerBodyTypes[i].DataBlockCount);
@@ -435,20 +439,20 @@ namespace HydraX.Library
 
                     customizationTable["bodyType" + (i + 1).ToString("00")] = playerBodyType.Name;
 
-                    instance.GDTs["Character"][playerBodyType.Name] = playerBodyType;
+                    instance.AddGDTAsset(playerBodyType, playerBodyType.Type, playerBodyType.Name);
                 }
 
-                instance.GDTs["Character"][customizationTable.Name] = customizationTable;
+                instance.AddGDTAsset(customizationTable, customizationTable.Type, customizationTable.Name);
 
-                return HydraStatus.Success;
+                return;
             }
 
             /// <summary>
             /// Checks if the given asset is a null slot
             /// </summary>
-            public bool IsNullAsset(GameAsset asset)
+            public bool IsNullAsset(Asset asset)
             {
-                return IsNullAsset(asset.NameLocation);
+                return IsNullAsset((long)asset.Data);
             }
 
             /// <summary>

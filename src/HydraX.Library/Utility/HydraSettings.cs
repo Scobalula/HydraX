@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -18,7 +19,13 @@ namespace HydraX.Library
         {
             get
             {
-                return Values.TryGetValue(key, out var val) ? val : defaultVal;
+                if(!Values.TryGetValue(key, out var val))
+                {
+                    val = defaultVal;
+                    Values[key] = val;
+                }
+
+                return val;
             }
         }
 
@@ -55,27 +62,11 @@ namespace HydraX.Library
         {
             try
             {
-                if (!File.Exists(fileName))
-                {
-                    Save(fileName);
-                }
-                else
-                {
-                    using (var reader = new BinaryReader(new FileStream(fileName, FileMode.Open)))
-                    {
-                        if (reader.ReadUInt32() == 0x47464348)
-                        {
-                            int count = reader.ReadInt32();
-
-                            for (int i = 0; i < count; i++)
-                                Values[reader.ReadString()] = reader.ReadString();
-                        }
-                    }
-                }
+                Values = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(fileName));
             }
             catch
             {
-                return;
+                Save(fileName);
             }
         }
 
@@ -87,16 +78,20 @@ namespace HydraX.Library
         {
             try
             {
-                using (var writer = new BinaryWriter(new FileStream(fileName, FileMode.Create)))
+                using (JsonTextWriter output = new JsonTextWriter(new StreamWriter(fileName)))
                 {
-                    writer.Write(0x47464348);
-                    writer.Write(Values.Count);
+                    output.Formatting = Formatting.Indented;
+                    output.Indentation = 4;
+                    output.IndentChar = ' ';
 
-                    foreach (var value in Values)
+                    JsonSerializer serializer = new JsonSerializer
                     {
-                        writer.Write(value.Key);
-                        writer.Write(value.Value);
-                    }
+                        NullValueHandling = NullValueHandling.Ignore,
+                        DefaultValueHandling = DefaultValueHandling.Ignore
+                    };
+
+                    serializer.Serialize(output, Values);
+
                 }
             }
             catch

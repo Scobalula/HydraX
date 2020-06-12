@@ -87,11 +87,11 @@ namespace HydraX.Library
             /// <summary>
             /// Loads Assets from this Asset Pool
             /// </summary>
-            public List<GameAsset> Load(HydraInstance instance)
+            public List<Asset> Load(HydraInstance instance)
             {
-                var results = new List<GameAsset>();
+                var results = new List<Asset>();
 
-                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 0x20));
+                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.AssetPoolsAddress + (Index * 0x20));
 
                 StartAddress = poolInfo.PoolPointer;
                 AssetSize = poolInfo.AssetSize;
@@ -99,18 +99,21 @@ namespace HydraX.Library
 
                 for(int i = 0; i < AssetCount; i++)
                 {
-                    var header = instance.Reader.ReadStruct<RumbleAsset>(StartAddress + (i * AssetSize));
+                    var address = StartAddress + (i * AssetSize);
+                    var namePointer = instance.Reader.ReadInt64(address);
 
-                    if (IsNullAsset(header.NamePointer))
+                    if (IsNullAsset(namePointer))
                         continue;
 
-                    results.Add(new GameAsset()
+                    results.Add(new Asset()
                     {
-                        Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
-                        HeaderAddress = StartAddress + (i * AssetSize),
-                        AssetPool = this,
-                        Type = Name,
-                        Information = "N/A"
+                        Name        = instance.Reader.ReadNullTerminatedString(namePointer),
+                        Type        = Name,
+                        Zone        = ((BlackOps3)instance.Game).ZoneNames[address],
+                        Information = "N/A",
+                        Status      = "Loaded",
+                        Data        = address,
+                        LoadMethod  = ExportAsset,
                     });
                 }
 
@@ -120,12 +123,12 @@ namespace HydraX.Library
             /// <summary>
             /// Exports the given asset from this pool
             /// </summary>
-            public HydraStatus Export(GameAsset asset, HydraInstance instance)
+            public void ExportAsset(Asset asset, HydraInstance instance)
             {
-                var header = instance.Reader.ReadStruct<RumbleAsset>(asset.HeaderAddress);
+                var header = instance.Reader.ReadStruct<RumbleAsset>((long)asset.Data);
 
                 if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
-                    return HydraStatus.MemoryChanged;
+                    throw new Exception("The asset at the expect memory address has changed. Press the Load Game button to refresh the asset list.");
 
                 var rumbleAsset = new GameDataTable.Asset(asset.Name, "rumble");
 
@@ -142,9 +145,9 @@ namespace HydraX.Library
                 rumbleAsset["lowrumblefile"]       = WriteRumbleFile(header.LowRumbleFilePointer, instance);
                 rumbleAsset["highrumblefile"]      = WriteRumbleFile(header.HighRumbleFilePointer, instance);
 
-                instance.GDTs["Physic"][rumbleAsset.Name] = rumbleAsset;
+                instance.AddGDTAsset(rumbleAsset, rumbleAsset.Type, rumbleAsset.Name);
 
-                return HydraStatus.Success;
+                return;
             }
 
             public string WriteRumbleFile(long address, HydraInstance instance)
@@ -181,9 +184,9 @@ namespace HydraX.Library
             /// <summary>
             /// Checks if the given asset is a null slot
             /// </summary>
-            public bool IsNullAsset(GameAsset asset)
+            public bool IsNullAsset(Asset asset)
             {
-                return IsNullAsset(asset.NameLocation);
+                return IsNullAsset((long)asset.Data);
             }
 
             /// <summary>

@@ -42,17 +42,7 @@ namespace HydraX.Library
         /// <summary>
         /// Loads Assets from the given Asset Pool
         /// </summary>
-        List<GameAsset> Load(HydraInstance instance);
-
-        /// <summary>
-        /// Exports the given asset from the game
-        /// </summary>
-        HydraStatus Export(GameAsset asset, HydraInstance instance);
-
-        /// <summary>
-        /// Checks if the given asset is null
-        /// </summary>
-        bool IsNullAsset(GameAsset asset);
+        List<Asset> Load(HydraInstance instance);
 
         /// <summary>
         /// Checks if the given pointer points to a null slot

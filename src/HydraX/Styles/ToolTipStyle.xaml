@@ -1,0 +1,19 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style TargetType="ToolTip">
+        <Setter Property="OverridesDefaultStyle" Value="true"/>
+        <Setter Property="HasDropShadow" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border Name="Border" BorderThickness="1" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}" Background="#FF1C1C1C">
+                        <Border.BorderBrush>
+                            <SolidColorBrush Color="{DynamicResource BorderMediumColor}"/>
+                        </Border.BorderBrush>
+                        <ContentPresenter Margin="4" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

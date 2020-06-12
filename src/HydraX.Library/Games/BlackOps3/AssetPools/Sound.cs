@@ -963,11 +963,11 @@ namespace HydraX.Library
             /// <summary>
             /// Loads Assets from this Asset Pool
             /// </summary>
-            public List<GameAsset> Load(HydraInstance instance)
+            public List<Asset> Load(HydraInstance instance)
             {
-                var results = new List<GameAsset>();
+                var results = new List<Asset>();
 
-                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 0x20));
+                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.AssetPoolsAddress + (Index * 0x20));
 
                 StartAddress = poolInfo.PoolPointer;
                 AssetSize = poolInfo.AssetSize;
@@ -983,7 +983,7 @@ namespace HydraX.Library
                         if (IsNullAsset(header.NamePointer))
                             continue;
 
-                        var aliases = instance.Reader.ReadArray<SoundAlias>(header.AliasesPointer, header.AliasCount);
+                        var aliases = instance.Reader.ReadArrayUnsafe<SoundAlias>(header.AliasesPointer, header.AliasCount);
 
                         // For dumping Hashes for SAB
                         foreach (var alias in aliases)
@@ -1003,12 +1003,16 @@ namespace HydraX.Library
                             //}
                         }
 
-                        results.Add(new GameAsset()
+                        var address = StartAddress + (i * AssetSize);
+
+                        results.Add(new Asset()
                         {
-                            Name = instance.Reader.ReadNullTerminatedString(header.NamePointer).Split(':')[0],
-                            HeaderAddress = StartAddress + (i * AssetSize),
-                            AssetPool = this,
-                            Type = Name,
+                            Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
+                            Type        = Name,
+                            Status      = "Loaded",
+                            Data        = address,
+                            LoadMethod  = ExportAsset,
+                            Zone = ((BlackOps3)instance.Game).ZoneNames[address],
                             Information = string.Format("Aliases: {0}", header.AliasCount)
                         });
                     }
@@ -1341,12 +1345,12 @@ namespace HydraX.Library
             /// <summary>
             /// Exports the given asset from this pool
             /// </summary>
-            public HydraStatus Export(GameAsset asset, HydraInstance instance)
+            public void ExportAsset(Asset asset, HydraInstance instance)
             {
-                var header = instance.Reader.ReadStruct<SoundAsset>(asset.HeaderAddress);
+                var header = instance.Reader.ReadStruct<SoundAsset>((long)asset.Data);
 
                 if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer).Split(':')[0])
-                    return HydraStatus.MemoryChanged;
+                    throw new Exception("The asset at the expect memory address has changed. Press the Load Game button to refresh the asset list.");
 
                 Directory.CreateDirectory(instance.SoundZoneFolder);
                 Directory.CreateDirectory(instance.SoundMusicFolder);
@@ -1374,15 +1378,15 @@ namespace HydraX.Library
                         output.WriteLine(musicSetName);
                 }
 
-                return HydraStatus.Success;
+                return;
             }
 
             /// <summary>
             /// Checks if the given asset is a null slot
             /// </summary>
-            public bool IsNullAsset(GameAsset asset)
+            public bool IsNullAsset(Asset asset)
             {
-                return IsNullAsset(asset.NameLocation);
+                return IsNullAsset((long)asset.Data);
             }
 
             /// <summary>

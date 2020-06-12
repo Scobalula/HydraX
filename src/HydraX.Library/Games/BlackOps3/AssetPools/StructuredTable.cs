@@ -32,44 +32,37 @@ namespace HydraX.Library
             [StructLayout(LayoutKind.Sequential, Pack = 8, Size = 0x30)]
             private struct StructuredTableAsset
             {
-                #region StructuredTableProperties
                 public long NamePointer;
-                public int DataCount;
-                public int PropertyCount;
-                public int EntryCount;
-                public int Padding;
-                public long DataPointer;
-                public long DataIndicesPointer;
-                public long PropertiesPointer;
-                public long PropertyIndicesPointer;
-                #endregion
+                public int TotalCellCount;
+                public int HeaderCount;
+                public int CellCount;
+                public long CellsPointer;
+                public long CellIndicesPointer;
+                public long HeadersPointer;
+                public long HeaderIndicesPointer;
             }
 
             /// <summary>
             /// Structured Table Property Structure
             /// </summary>
             [StructLayout(LayoutKind.Sequential, Pack = 8, Size = 0x10)]
-            private struct StructuredTableProperty
+            private struct StructuredTableHeader
             {
-                #region StructuredTablePropertyProperties
                 public long StringPointer;
                 public int Hash;
                 public int Index;
-                #endregion
             }
 
             /// <summary>
             /// Structured Table Entry Data Structure
             /// </summary>
             [StructLayout(LayoutKind.Sequential, Pack = 8, Size = 0x18)]
-            private struct StructuredTableEntryData
+            private struct StructuredTableCell
             {
-                #region StructuredTablePropertyProperties
                 public EntryDataType DataType;
                 public long StringPointer;
                 public int IntegerValue;
                 public int Checksum;
-                #endregion
             }
             #endregion
 
@@ -111,11 +104,11 @@ namespace HydraX.Library
             /// <summary>
             /// Loads Assets from this Asset Pool
             /// </summary>
-            public List<GameAsset> Load(HydraInstance instance)
+            public List<Asset> Load(HydraInstance instance)
             {
-                var results = new List<GameAsset>();
+                var results = new List<Asset>();
 
-                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 0x20));
+                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.AssetPoolsAddress + (Index * 0x20));
 
                 StartAddress = poolInfo.PoolPointer;
                 AssetSize = poolInfo.AssetSize;
@@ -128,13 +121,17 @@ namespace HydraX.Library
                     if (IsNullAsset(header.NamePointer))
                         continue;
 
-                    results.Add(new GameAsset()
+                    var address = StartAddress + (i * AssetSize);
+
+                    results.Add(new Asset()
                     {
                         Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
-                        HeaderAddress = StartAddress + (i * AssetSize),
-                        AssetPool = this,
-                        Type = Name,
-                        Information = string.Format("Entries: {0} - Properties: {1}", header.EntryCount, header.PropertyCount)
+                        Type        = Name,
+                        Status      = "Loaded",
+                        Data        = address,
+                        LoadMethod  = ExportAsset,
+                        Zone = ((BlackOps3)instance.Game).ZoneNames[address],
+                        Information = string.Format("Entries: {0} - Properties: {1}", header.CellCount, header.HeaderCount)
                     });
                 }
 
@@ -144,29 +141,29 @@ namespace HydraX.Library
             /// <summary>
             /// Exports the given asset from this pool
             /// </summary>
-            public HydraStatus Export(GameAsset asset, HydraInstance instance)
+            public void ExportAsset(Asset asset, HydraInstance instance)
             {
-                var header = instance.Reader.ReadStruct<StructuredTableAsset>(asset.HeaderAddress);
+                var header = instance.Reader.ReadStruct<StructuredTableAsset>((long)asset.Data);
 
                 if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
-                    return HydraStatus.MemoryChanged;
+                    throw new Exception("The asset at the expect memory address has changed. Press the Load Game button to refresh the asset list.");
 
-                var data            = instance.Reader.ReadArray<StructuredTableEntryData>(header.DataPointer, header.DataCount);
-                var properties      = instance.Reader.ReadArray<StructuredTableProperty>(header.PropertiesPointer, header.PropertyCount);
-                var propertyNames   = new string[header.PropertyCount];
+                var data            = instance.Reader.ReadArray<StructuredTableCell>(header.CellsPointer, header.TotalCellCount);
+                var properties      = instance.Reader.ReadArray<StructuredTableHeader>(header.HeadersPointer, header.HeaderCount);
+                var propertyNames   = new string[header.HeaderCount];
 
                 for (int i = 0; i < propertyNames.Length; i++)
                     propertyNames[i] = instance.Reader.ReadNullTerminatedString(properties[i].StringPointer);
 
-                var structuredTableObj = new StructuredTableObj(header.EntryCount);
+                var structuredTableObj = new StructuredTableObj(header.CellCount);
 
-                for(int i = 0; i < header.EntryCount; i++)
+                for(int i = 0; i < header.CellCount; i++)
                 {
                     structuredTableObj.Data[i] = new Dictionary<string, object>();
 
-                    for(int j = 0; j < header.PropertyCount; j++)
+                    for(int j = 0; j < header.HeaderCount; j++)
                     {
-                        var dataIndex = (i * header.PropertyCount) + j;
+                        var dataIndex = (i * header.HeaderCount) + j;
 
                         // Switch by type, add if it's valid
                         switch (data[dataIndex].DataType)
@@ -187,17 +184,14 @@ namespace HydraX.Library
                 }
 
                 structuredTableObj.Save(Path.Combine(instance.ExportFolder, asset.Name));
-
-                // Done
-                return HydraStatus.Success;
             }
 
             /// <summary>
             /// Checks if the given asset is a null slot
             /// </summary>
-            public bool IsNullAsset(GameAsset asset)
+            public bool IsNullAsset(Asset asset)
             {
-                return IsNullAsset(asset.NameLocation);
+                return IsNullAsset((long)asset.Data);
             }
 
             /// <summary>

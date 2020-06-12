@@ -3,8 +3,8 @@
                     xmlns:local="clr-namespace:Greyhound.UI">
     <Style TargetType="{x:Type ProgressBar}">
         <Setter Property="Foreground" Value="#FF2980b9"/>
-        <Setter Property="Background" Value="#FF031F4B"/>
-        <Setter Property="BorderBrush" Value="#FF031F4B"/>
+        <Setter Property="Background" Value="#FF252526"/>
+        <Setter Property="BorderBrush" Value="#FF252526"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Template">
             <Setter.Value>

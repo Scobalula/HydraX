@@ -1,5 +1,4 @@
 ﻿using HydraX.Library;
-using PhilLibX.Compression;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -27,11 +26,6 @@ namespace HydraX
     public partial class MainWindow : Window
     {
         /// <summary>
-        /// Whether or not we need to end any active threads
-        /// </summary>
-        private bool EndThread = false;
-
-        /// <summary>
         /// Active Instance
         /// </summary>
         private HydraInstance Instance = new HydraInstance();
@@ -47,18 +41,14 @@ namespace HydraX
         public MainViewModel ViewModel { get; } = new MainViewModel();
 
         /// <summary>
-        /// Sets the dimmer
-        /// </summary>
-        private void SetDimmer(Visibility visibility) => Dispatcher.BeginInvoke(new Action(() => Dimmer.Visibility = visibility));
-
-        /// <summary>
         /// Main Window Constructor
         /// </summary>
         public MainWindow()
         {
             InitializeComponent();
             DataContext = ViewModel;
-            Instance.Settings.Load("Settings.hcfg");
+            ViewModel.DimmerVisibility = Visibility.Hidden;
+            Instance.Settings.Load("Settings.json");
             Log("HydraX - Log Session Begin", "BEGIN");
 
             try
@@ -89,12 +79,11 @@ namespace HydraX
         /// </summary>
         private void AssetListMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (((FrameworkElement)e.OriginalSource).DataContext is GameAsset asset)
+            if (((FrameworkElement)e.OriginalSource).DataContext is Asset asset)
             {
-                ExportAssets(new List<GameAsset>()
-                {
-                    asset
-                });
+                ViewModel.DimmerVisibility = Visibility.Visible;
+                new ProgressWindow(ExportAssets, null, ProgressComplete, "Exporting Assets...", new List<Asset>() { asset }, 1, this).ShowDialog();
+                ViewModel.DimmerVisibility = Visibility.Hidden;
             }
         }
 
@@ -105,84 +94,40 @@ namespace HydraX
         {
             LogStream?.Flush();
             LogStream?.Dispose();
-            Instance.Settings.Save("Settings.hcfg");
+            Instance.Settings.Save("Settings.json");
         }
 
-        public void ExportAssets(List<GameAsset> assets)
+        public void ExportAssets(object sender, DoWorkEventArgs e)
         {
-            var result = Instance.ValidateGame();
+            Instance.Settings.Load("Settings.json");
+            Instance.RefreshGDTDB();
+            Instance.LoadGDTs();
 
-            switch (result)
+            var window = e.Argument as ProgressWindow;
+
+            Parallel.ForEach(window.Data as List<Asset>, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, (asset, loop) =>
             {
-                case HydraStatus.MemoryChanged:
-                    {
-                        Log("The game's Process ID has changed, click Load Game to refresh the asset list.", "ERROR");
-                        MessageBox.Show("The game's Process ID has changed, click Load Game to refresh the asset list.", "HydraX | Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return;
-                    }
-                case HydraStatus.GameClosed:
-                    {
-                        Log("HydraX failed to find the game's process, this is an indication that the game has been closed.", "ERROR");
-                        MessageBox.Show("HydraX failed to find the game's process, this is an indication that the game has been closed.", "HydraX | Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return;
-                    }
-            }
+                window.Worker.ReportProgress(0);
 
-            var progressWindow = new ProgressWindow()
-            {
-                Owner = this,
-                Title = "HydraX | Working"
-            };
-
-            Dispatcher.BeginInvoke(new Action(() => progressWindow.ShowDialog()));
-            progressWindow.SetProgressCount(assets.Count);
-
-            new Thread(() =>
-            {
-
-                SetDimmer(Visibility.Visible);
-
-                Instance.LoadGDTs();
-                Instance.RefreshGDTDB();
-
-                Parallel.ForEach(assets, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, (asset, loop) =>
+                try
                 {
-                    try
-                    {
-                        if (asset.AssetPool.Export(asset, Instance) == HydraStatus.MemoryChanged)
-                        {
-                            Log(string.Format("The expected data @ 0x{0:X} has changed, {1} skipped.", asset.HeaderAddress, asset.Name), "ERROR");
-                            asset.Status = "Error";
-                        }
-                        else
-                        {
-                            Log(string.Format("Exported {0}", asset.Name), "INFO");
-                            asset.Status = "Exported";
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        // Anything else we should log it
-                        Log(string.Format("An unhandled exception while exporting {0}:\n\n{1}", asset.Name, e), "ERROR");
-                        asset.Status = "Error";
-                    }
-
-                    if (progressWindow.IncrementProgress() || EndThread)
-                        loop.Break();
-                });
-
-                Instance.FlushGDTs();
-                Dispatcher.BeginInvoke(new Action(() =>
+                    asset.Save(System.IO.Path.Combine(Instance.ExportFolder, asset.Type), Instance);
+                    Log(string.Format("Exported {0}", asset.Name), "INFO");
+                    asset.Status = "Exported";
+                }
+                catch (Exception exception)
                 {
-                    GC.Collect();
-                    progressWindow.Complete();
-                    new ExportFinishedDialog()
-                    {
-                        Owner = this
-                    }.ShowDialog();
-                    SetDimmer(Visibility.Hidden);
-                }));
-            }).Start();
+                    // Anything else we should log it
+                    Log(string.Format("An unhandled exception while exporting {0}:\n\n{1}", asset.Name, exception), "ERROR");
+                    asset.Status = "Error";
+                }
+
+                if (window.Worker.CancellationPending)
+                    loop.Break();
+            });
+
+            Instance.FlushGDTs();
+            Instance.Settings.Save("Settings.json");
         }
 
         /// <summary>
@@ -203,66 +148,61 @@ namespace HydraX
         /// <summary>
         /// Opens file dialog to open a package
         /// </summary>
-        private void OpenFileClick(object sender, RoutedEventArgs e)
+        private void OpenGameClick(object sender, RoutedEventArgs e)
         {
+            Title = "HydraX | Loading Game......";
+            ViewModel.AssetButtonsEnabled = false;
+
             Instance.Clear();
-            ViewModel.Assets.ClearAssets();
+            ViewModel.Assets.ClearAllItems();
 
-            // Attempt to load game
-            try
+            // Init Worker
+            var worker = new BackgroundWorker();
+
+            worker.DoWork += LoadGameWorker;
+            worker.RunWorkerCompleted += ProgressComplete;
+
+            worker.RunWorkerAsync();
+        }
+
+        private void LoadGameWorker(object sender, DoWorkEventArgs e)
+        {
+            Instance.LoadGame();
+            ViewModel.Assets.AddRange(Instance.Assets);
+        }
+
+        /// <summary>
+        /// Handles on progress complete
+        /// </summary>
+        private void ProgressComplete(object sender, RunWorkerCompletedEventArgs e)
+        {
+            GC.Collect();
+            // ViewModel.DimmerVisibility = Visibility.Hidden;
+            ViewModel.AssetButtonsEnabled = true;
+
+            if (e.Error == null)
             {
-                // Sent to Hydra Lib
-                var status = Instance.LoadGame();
-
-                switch (status)
-                {
-                    case HydraStatus.Success:
-                        {
-                            ViewModel.Assets.AddAssets(Instance.Assets);
-                            Title = string.Format("HydraX | Loaded {0} assets from {1}", Instance.Assets.Count, Instance.Game.Name);
-                            Log(string.Format("Loaded {0} Assets from {1} Successfully", Instance.Assets.Count, Instance.Game.Name), "INFO");
-                            break;
-                        }
-                    case HydraStatus.UnsupportedBinary:
-                        {
-                            Log("HydraX supports this game, but not this executable, if the game was recently updated, please wait for an update to HydraX.", "ERROR");
-                            MessageBox.Show("HydraX supports this game, but not this executable, if the game was recently updated, please wait for an update to HydraX.", "HydraX | Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                            Instance.Clear();
-                            break;
-                        }
-                    case HydraStatus.FailedToFindGame:
-                        {
-                            Log("HydraX failed to find a supported game, please ensure one of them is running.", "ERROR");
-                            MessageBox.Show("HydraX failed to find a supported game, please ensure one of them is running.", "HydraX | Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                            Instance.Clear();
-                            break;
-                        }
-                }
+                ViewModel.Assets.SendNotify();
+                Title = string.Format("HydraX | Loaded {0} assets from {1}", Instance.Assets.Count, Instance.Game.Name);
             }
-            catch (Exception exception)
+            else if(e.Error is GameNotFoundException)
             {
-                Log(string.Format("An unhandled exception occured while loading the game:\n\n{0}", exception), "ERROR");
-                MessageBox.Show(string.Format("An unhandled exception occured while loading the game:\n\n{0}", exception), "HydraX | Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Log("HydraX failed to find a supported game, please ensure one of them is running.", "ERROR");
+                MessageBox.Show("HydraX failed to find a supported game, please ensure one of them is running.", "HydraX | Oops", MessageBoxButton.OK, MessageBoxImage.Error);
                 Instance.Clear();
             }
-            //ViewModel.Assets.ClearAssets();
-            //ActivePackage?.Dispose();
-            //ActivePackage = null;
-            //GC.Collect();
-
-            //var dialog = new OpenFileDialog()
-            //{
-            //    Title = "HydraX | Open File",
-            //    Filter = "Package files (*.pak)|*.pak|All files (*.*)|*.*"
-            //};
-
-            //if (dialog.ShowDialog() == true)
-            //{
-            //    if (Path.GetExtension(dialog.FileName).ToLower() == ".pak")
-            //    {
-            //        LoadPackage(dialog.FileName);
-            //    }
-            //}
+            else if (e.Error is GameNotSupportedException gnsException)
+            {
+                Log(string.Format("HydraX supports {0}, but not this version of it, if the game was recently updated, please wait for an update to HydraX.", gnsException.GameName), "ERROR");
+                MessageBox.Show(string.Format("HydraX supports {0}, but not this version of it, if the game was recently updated, please wait for an update to HydraX.", gnsException.GameName), "HydraX | Oops", MessageBoxButton.OK, MessageBoxImage.Error);
+                Instance.Clear();
+            }
+            else if(e.Error is Exception exception)
+            {
+                Log(string.Format("An unhandled exception has occurred, take this to my creator:\n\n{0}", exception), "ERROR");
+                MessageBox.Show(string.Format("An unhandled exception has occurred, take this to my creator:\n\n{0}", exception), "HydraX | Oops", MessageBoxButton.OK, MessageBoxImage.Error);
+                Instance.Clear();
+            }
         }
 
         /// <summary>
@@ -270,17 +210,20 @@ namespace HydraX
         /// </summary>
         private void ExportAllClick(object sender, RoutedEventArgs e)
         {
-            var assets = AssetList.Items.Cast<GameAsset>().ToList();
+            var assets = AssetList.Items.Cast<Asset>().ToList();
 
             if (assets.Count == 0)
             {
-                SetDimmer(Visibility.Visible);
-                MessageBox.Show("There are no assets listed to export. Load some assets first.", "HydraX | Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                SetDimmer(Visibility.Hidden);
-                return;
+                ViewModel.DimmerVisibility = Visibility.Visible;
+                MessageBox.Show("There are no assets listed to export.", "Greyhound | Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ViewModel.DimmerVisibility = Visibility.Hidden;
             }
-
-            ExportAssets(assets);
+            else
+            {
+                ViewModel.DimmerVisibility = Visibility.Visible;
+                new ProgressWindow(ExportAssets, null, ProgressComplete, "Exporting Assets...", assets, assets.Count, this).ShowDialog();
+                ViewModel.DimmerVisibility = Visibility.Hidden;
+            }
         }
 
         /// <summary>
@@ -288,59 +231,30 @@ namespace HydraX
         /// </summary>
         private void ExportSelectedClick(object sender, RoutedEventArgs e)
         {
-            var assets = AssetList.SelectedItems.Cast<GameAsset>().ToList();
+            var assets = AssetList.SelectedItems.Cast<Asset>().ToList();
 
             if (assets.Count == 0)
             {
-                SetDimmer(Visibility.Visible);
-                MessageBox.Show("There are no assets selected to export. Select assets in the list first.", "HydraX | Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                SetDimmer(Visibility.Hidden);
-                return;
+                ViewModel.DimmerVisibility = Visibility.Visible;
+                MessageBox.Show("There are no assets listed to export.", "Greyhound | Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ViewModel.DimmerVisibility = Visibility.Hidden;
             }
-
-            ExportAssets(assets);
+            else
+            {
+                ViewModel.DimmerVisibility = Visibility.Visible;
+                new ProgressWindow(ExportAssets, null, ProgressComplete, "Exporting Assets...", assets, assets.Count, this).ShowDialog();
+                ViewModel.DimmerVisibility = Visibility.Hidden;
+            }
         }
 
         /// <summary>
-        /// Opens settings window
+        /// Opens the Donation Page
         /// </summary>
-        private void SettingsClick(object sender, RoutedEventArgs e)
-        {
-            var settings = new SettingsWindow()
-            {
-                Owner = this
-            };
-
-            Dimmer.Visibility = Visibility.Visible;
-
-            settings.SetUIFromSettings(Instance.Settings);
-            settings.ShowDialog();
-            settings.SetSettingsFromUI(Instance.Settings);
-
-            Dimmer.Visibility = Visibility.Hidden;
-        }
+        private void DonateClick(object sender, RoutedEventArgs e) => System.Diagnostics.Process.Start("https://www.paypal.me/Scobalula");
 
         /// <summary>
-        /// Opens about window
+        /// Opens the Discord Invite
         /// </summary>
-        private void AboutClick(object sender, RoutedEventArgs e)
-        {
-            SetDimmer(Visibility.Visible);
-            new AboutWindow()
-            {
-                Owner = this
-            }.ShowDialog();
-            SetDimmer(Visibility.Hidden);
-        }
-
-        private void DonateClick(object sender, RoutedEventArgs e)
-        {
-            System.Diagnostics.Process.Start("https://www.paypal.me/Scobalula");
-        }
-
-        private void DiscordClick(object sender, RoutedEventArgs e)
-        {
-            System.Diagnostics.Process.Start("https://discord.gg/fGVpV39");
-        }
+        private void DiscordClick(object sender, RoutedEventArgs e) => System.Diagnostics.Process.Start("https://discord.gg/RyqyThu");
     }
 }

@@ -3,9 +3,9 @@
     <Style TargetType="{x:Type Button}" x:Key="IconButtonStyle">
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}"/>
         <Setter Property="Background" Value="{x:Null}"/>
-        <Setter Property="BorderBrush" Value="{x:Null}"/>
+        <Setter Property="BorderBrush" Value="#00DE8300"/>
         <Setter Property="Foreground" Value="#FFFFFFFF"/>
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderThickness" Value="2,0,0,0"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Padding" Value="1"/>
@@ -20,16 +20,16 @@
                             <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="true">
-                            <Setter Property="Background" TargetName="border" Value="#FF0A5080"/>
-                            <Setter Property="BorderBrush" TargetName="border" Value="#FF0A5080"/>
+                            <Setter Property="Background" TargetName="border" Value="#FF404040"/>
+                            <Setter Property="BorderBrush" TargetName="border" Value="#FF39ACE7"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="true">
-                            <Setter Property="Background" TargetName="border" Value="#FF003060"/>
-                            <Setter Property="BorderBrush" TargetName="border" Value="#FF043060"/>
+                            <Setter Property="Background" TargetName="border" Value="#FF303030"/>
+                            <Setter Property="BorderBrush" TargetName="border" Value="#FF0784B5"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="false">
-                            <Setter Property="Background" TargetName="border" Value="#FF04396C"/>
-                            <Setter Property="BorderBrush" TargetName="border" Value="#FF04396C"/>
+                            <Setter Property="Background" TargetName="border" Value="#FF303030"/>
+                            <Setter Property="BorderBrush" TargetName="border" Value="#FFE73939"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

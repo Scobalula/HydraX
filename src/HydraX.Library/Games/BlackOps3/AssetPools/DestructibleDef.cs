@@ -233,14 +233,14 @@ namespace HydraX.Library
             /// <summary>
             /// Loads Assets from this Asset Pool
             /// </summary>
-            public List<GameAsset> Load(HydraInstance instance)
+            public List<Asset> Load(HydraInstance instance)
             {
-                var results = new List<GameAsset>();
+                var results = new List<Asset>();
 
                 // Not complete
                 return results;
 
-                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 0x20));
+                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.AssetPoolsAddress + (Index * 0x20));
 
                 StartAddress = poolInfo.PoolPointer;
                 AssetSize = poolInfo.AssetSize;
@@ -254,15 +254,15 @@ namespace HydraX.Library
                     if (IsNullAsset(namePointer))
                         continue;
 
-                    results.Add(new GameAsset()
+                    results.Add(new Asset()
                     {
                         Name = instance.Reader.ReadNullTerminatedString(namePointer),
-                        NameLocation = namePointer,
-                        HeaderAddress = StartAddress + (i * AssetSize),
-                        AssetPool = this,
-                        Size = AssetSize,
                         Type = Name,
-                        Information = "N/A"
+                        Zone = ((BlackOps3)instance.Game).ZoneNames[address],
+                        Information = "N/A",
+                        Status = "Loaded",
+                        Data = address,
+                        LoadMethod = ExportAsset,
                     });
                 }
 
@@ -272,41 +272,41 @@ namespace HydraX.Library
             /// <summary>
             /// Exports the given asset from this pool
             /// </summary>
-            public HydraStatus Export(GameAsset asset, HydraInstance instance)
+            public void ExportAsset(Asset asset, HydraInstance instance)
             {
-                var header = instance.Reader.ReadStruct<DestructibleDefAsset>(asset.HeaderAddress);
+                //var header = instance.Reader.ReadStruct<DestructibleDefAsset>((long)asset.Data);
 
-                if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
-                    return HydraStatus.MemoryChanged;
+                //if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer))
+                //    throw new Exception("The asset at the expect memory address has changed. Press the Load Game button to refresh the asset list.");
 
-                var result = new GameDataTable.Asset(asset.Name, "destructibledef");
+                //var result = new GameDataTable.Asset(asset.Name, "destructibledef");
 
-                for(int i = 0; i < header.PieceCount; i++)
-                {
-                    var pieceBuffer = instance.Reader.ReadBytes(header.PiecesPointer + (i * 932), 932);
+                //for(int i = 0; i < header.PieceCount; i++)
+                //{
+                //    var pieceBuffer = instance.Reader.ReadBytes(header.PiecesPointer + (i * 932), 932);
 
-                    var pieceGdtAsset = GameDataTable.ConvertStructToGDTAsset(pieceBuffer, DestructiblePieceOffsets, instance, HandleDestructibleDefSettings);
+                //    var pieceGdtAsset = ConvertAssetBufferToGDTAsset(pieceBuffer, DestructiblePieceOffsets, instance, HandleDestructibleDefSettings);
 
-                    pieceGdtAsset.Name = string.Format("{0}_piece{1}", asset.Name, i);
-                    pieceGdtAsset.Type = "destructiblepiece";
+                //    pieceGdtAsset.Name = string.Format("{0}_piece{1}", asset.Name, i);
+                //    pieceGdtAsset.Type = "destructiblepiece";
 
 
-                    result[string.Format("piece{0}", i)] = pieceGdtAsset.Name;
+                //    result[string.Format("piece{0}", i)] = pieceGdtAsset.Name;
 
-                    // Add to GDT
-                    instance.GDTs["Misc"][pieceGdtAsset.Name] = pieceGdtAsset;
-                }
+                //    // Add to GDT
+                //    instance.GDTs["Misc"][pieceGdtAsset.Name] = pieceGdtAsset;
+                //}
 
-                // Add to GDT
-                instance.GDTs["Misc"][asset.Name] = result;
+                //// Add to GDT
+                //instance.GDTs["Misc"][asset.Name] = result;
 
-                return HydraStatus.Success;
+                //return;
             }
 
             /// <summary>
             /// Handles DestructibleDef Specific Settings
             /// </summary>
-            private static object HandleDestructibleDefSettings(byte[] assetBuffer, int offset, int type, HydraInstance instance)
+            private static object HandleDestructibleDefSettings(GameDataTable.Asset asset, byte[] assetBuffer, int offset, int type, HydraInstance instance)
             {
                 switch (type)
                 {
@@ -318,9 +318,9 @@ namespace HydraX.Library
             /// <summary>
             /// Checks if the given asset is a null slot
             /// </summary>
-            public bool IsNullAsset(GameAsset asset)
+            public bool IsNullAsset(Asset asset)
             {
-                return IsNullAsset(asset.NameLocation);
+                return IsNullAsset((long)asset.Data);
             }
 
             /// <summary>

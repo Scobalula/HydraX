@@ -3,20 +3,20 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:HydraX"
         mc:Ignorable="d"
-        Background="#FF04396C"
-        Title="Tyrant | Working"
-        Height="183" Width="400" 
+        Background="#FF373737"
+        Title="HydraX | Working"
+        Height="162.967" Width="400"
         WindowStartupLocation="CenterOwner"
         Closing="WindowClosing" 
         ResizeMode="NoResize">
-    <Window.TaskbarItemInfo>
-        <TaskbarItemInfo x:Name="TaskBarProgress"></TaskbarItemInfo>
-    </Window.TaskbarItemInfo>
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="34" />
+    </WindowChrome.WindowChrome>
     <Grid>
-        <Label x:Name="Message" Content="Exporting Assets" Margin="10,10,10,0" VerticalAlignment="Top" Height="52" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Foreground="White" FontSize="22"/>
-        <Button Content="Cancel" Margin="0,0,10,10" Click="CancelClick" VerticalAlignment="Bottom" Height="25" ToolTip="Cancel the current task." HorizontalAlignment="Right" Width="75"/>
-        <ProgressBar x:Name="ProgressBar" Height="Auto" Margin="10,67,10,51" Foreground="White"/>
+        <TextBlock Margin="10,15,10,0" Text="{Binding Text}" VerticalAlignment="Top" Height="43" TextAlignment="Center" Foreground="White" FontSize="22"/>
+        <ProgressBar Maximum="{Binding Count}" Value="{Binding Value}" IsIndeterminate="{Binding Indeterminate}" Height="36" Margin="10,58,10,0" Foreground="White" VerticalAlignment="Top"/>
+        <Button Content="Open Export Folder" Visibility="{Binding OpenExportFolderVisibility}" Margin="0,0,90,10" Click="OpenExportFolderClick"  VerticalAlignment="Bottom" Height="25" ToolTip="Cancel the current task." HorizontalAlignment="Right" Width="143"/>
+        <Button Content="{Binding RightButtonText, FallbackValue=Cancel}" Margin="0,0,10,10" Click="RightButtonClick" VerticalAlignment="Bottom" Height="25" ToolTip="Cancel the current task." HorizontalAlignment="Right" Width="75"/>
     </Grid>
 </Window>

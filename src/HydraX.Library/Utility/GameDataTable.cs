@@ -10,6 +10,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Text;
+// TODO: Speed up Read
 
 namespace HydraX.Library
 {
@@ -39,24 +40,24 @@ namespace HydraX.Library
         public class Asset
         {
             /// <summary>
-            /// Name of Asset
+            /// Gets or Sets the Name of Asset
             /// </summary>
             public string Name { get; set; }
 
             /// <summary>
-            /// Type of Asset (GDF)
+            /// Gets or Sets the Type of Asset (GDF)
             /// </summary>
             public string Type { get; set; }
 
             /// <summary>
-            /// If this asset is derived or not
+            /// Gets or Sets the Parent Asset if Derived
             /// </summary>
-            public bool Derivative { get; set; }
+            public string Parent { get; set; }
 
             /// <summary>
-            /// Asset Properties/Settings
+            /// Gets or Sets the Asset Properties/Settings
             /// </summary>
-            public Dictionary<object, object> Properties = new Dictionary<object, object>();
+            public Dictionary<string, object> Properties = new Dictionary<string, object>();
 
             /// <summary>
             /// Initializes a GDT Asset
@@ -91,36 +92,48 @@ namespace HydraX.Library
         }
 
         /// <summary>
-        /// Assets within this Game Data Table
+        /// Assets within this Game Data Table, in groups of type
         /// </summary>
-        public Dictionary<string, Asset> Assets { get; set; }
+        public Dictionary<string, Dictionary<string, Asset>> Assets { get; set; }
 
         /// <summary>
         /// Initializes a Game Data Table with an Asset List
         /// </summary>
         public GameDataTable()
         {
-            Assets = new Dictionary<string, Asset>();
+            Assets = new Dictionary<string, Dictionary<string, Asset>>();
         }
 
         /// <summary>
-        /// Gets or Sets the Asset with the given name
+        /// 
         /// </summary>
-        public Asset this[string key]
+        /// <param name="type"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public Asset this[string type, string key]
         {
             get
             {
-                lock(this)
-                {
-                    return Assets.TryGetValue(key, out var val) ? val : null;
-                }
+                return Assets.TryGetValue(type, out var assets) ? (assets.TryGetValue(key, out var val) ? val : null) : null;
             }
             set
             {
-                lock (this)
-                {
-                    Assets[key] = value;
-                }
+                if (!Assets.ContainsKey(type))
+                    Assets[type] = new Dictionary<string, Asset>();
+
+                Assets[type][key] = value;
+            }
+        }
+
+        public Dictionary<string, Asset> this[string type]
+        {
+            get
+            {
+                return Assets.TryGetValue(type, out var assets) ? assets: null;
+            }
+            set
+            {
+                Assets[type] = value;
             }
         }
 
@@ -131,6 +144,34 @@ namespace HydraX.Library
         public GameDataTable(string fileName)
         {
             Load(fileName);
+        }
+
+        /// <summary>
+        /// Attempts to locate the asset in the lists
+        /// </summary>
+        /// <param name="name">Name of the asset</param>
+        /// <returns>Asset</returns>
+        public Asset FindAsset(string name)
+        {
+            foreach (var list in Assets)
+                if (list.Value.TryGetValue(name, out var value))
+                    return value;
+
+            return null;
+        }
+
+        /// <summary>
+        /// Attempts to locate the asset in the lists
+        /// </summary>
+        /// <param name="name">Name of the asset</param>
+        /// <returns>Asset</returns>
+        public bool ContainsAsset(string type, string name)
+        {
+            if(Assets.TryGetValue(type, out var list))
+                if (list.ContainsKey(name))
+                    return true;
+
+            return false;
         }
 
         /// <summary>
@@ -146,27 +187,30 @@ namespace HydraX.Library
                 writer.WriteLine("{");
 
                 // Write each asset
-                foreach (var asset in Assets)
+                foreach (var list in Assets)
                 {
-                    // Get whether this asset is derived or not
-                    bool isDerived = asset.Value.Derivative;
+                    foreach (var asset in list.Value)
+                    {
+                        // Get whether this asset is derived or not
+                        bool isDerived = !string.IsNullOrWhiteSpace(asset.Value.Parent);
 
-                    // Write name and type
-                    writer.WriteLine("	\"{0}\" {2} \"{1}\" {3}",
-                        asset.Key,
-                        asset.Value.Type + (isDerived ? "" : ".gdf"),
-                        isDerived ? "[" : "(",
-                        isDerived ? "]" : ")");
+                        // Write name and type
+                        writer.WriteLine("\t\"{0}\" {2} \"{1}\" {3}",
+                            asset.Key,
+                            isDerived ? asset.Value.Parent : asset.Value.Type + ".gdf",
+                            isDerived ? "[" : "(",
+                            isDerived ? "]" : ")");
 
-                    // Write initial setting bracket
-                    writer.WriteLine("	{");
+                        // Write initial setting bracket
+                        writer.WriteLine("\t{");
 
-                    // Write Settings by KVP
-                    foreach (var setting in asset.Value.Properties)
-                        writer.WriteLine("		\"{0}\" \"{1}\"", setting.Key, setting.Value);
+                        // Write Settings by KVP
+                        foreach (var setting in asset.Value.Properties)
+                            writer.WriteLine("\t\t\"{0}\" \"{1}\"", setting.Key, setting.Value);
 
-                    // Write end bracket
-                    writer.WriteLine("	}");
+                        // Write end bracket
+                        writer.WriteLine("\t}");
+                    }
                 }
 
                 // Write EOF bracket
@@ -182,7 +226,7 @@ namespace HydraX.Library
         public void Load(string fileName)
         {
             // Create new asset list
-            Assets = new Dictionary<string, Asset>();
+            Assets = new Dictionary<string, Dictionary<string, Asset>>();
 
             // Read GDT lines
             string[] lines = File.ReadAllLines(fileName);
@@ -230,7 +274,7 @@ namespace HydraX.Library
                         throw new ArgumentException(string.Format("Error - Duplicate Asset: {0}.", activeAsset.Name));
 
                     // Add asset
-                    Assets.Add(activeAsset.Name, activeAsset);
+                    Assets[activeAsset.Type][activeAsset.Name] = activeAsset;
 
                     // Reset state
                     state = 0;
@@ -247,12 +291,14 @@ namespace HydraX.Library
                 {
                     // Check for normal parentheses
                     matches = Regex.Matches(lineTrim, "\\(([^\\)]*)\\)");
+                    // Get whether this asset is derived or not
+                    bool isDerived = matches.Count == 0;
 
                     // Create new asset
-                    activeAsset = new Asset() { Derivative = matches.Count == 0 };
+                    activeAsset = new Asset();
 
                     // No matches, check for derived parentheses
-                    if (matches.Count == 0)
+                    if (isDerived)
                         matches = Regex.Matches(lineTrim, "\\[([^\\)]*)\\]");
 
                     // Last check
@@ -269,6 +315,10 @@ namespace HydraX.Library
                     // Set Name/Type
                     activeAsset.Name = matches[0].Value.Replace("\"", "");
                     activeAsset.Type = matches[1].Value.Replace("\"", "").Replace(".gdf", "");
+                    activeAsset.Parent = matches[1].Value.Replace("\"", "").Replace(".gdf", "");
+
+                    if (isDerived)
+                        activeAsset.Type = FindAsset(activeAsset.Parent)?.Type ?? activeAsset.Parent;
 
                     // Set State
                     state = 2;
@@ -308,169 +358,6 @@ namespace HydraX.Library
                 // Unexpected token/Syntax issue
                 throw new ArgumentException(string.Format("Expecting EOF Bracket."));
             }
-        }
-
-        public static Asset ConvertStructToGDTAsset(byte[] assetBuffer, Tuple<string, int, int>[] properties, HydraInstance instance, Func<byte[], int, int, HydraInstance, object> extendedDataHandler = null)
-        {
-            // Create new asset
-            var asset = new Asset();
-
-            // Loop through potential properties
-            foreach (var property in properties)
-            {
-                // Switch type
-                switch (property.Item3)
-                {
-                    // Strings (Enum that points to a string)
-                    case 0:
-                        {
-                            asset[property.Item1] = instance.Reader.ReadNullTerminatedString(BitConverter.ToInt64(assetBuffer, property.Item2));
-                            break;
-                        }
-                    // Inline Character Array?
-                    case 1:
-                        {
-                            asset[property.Item1] = Encoding.ASCII.GetString(assetBuffer, property.Item2, 1024).TrimEnd('\0');
-                            break;
-                        }
-                    // Inline Character Array?
-                    case 2:
-                        {
-                            asset[property.Item1] = Encoding.ASCII.GetString(assetBuffer, property.Item2, 64).TrimEnd('\0');
-                            break;
-                        }
-                    // Inline Character Array?
-                    case 3:
-                        {
-                            asset[property.Item1] = Encoding.ASCII.GetString(assetBuffer, property.Item2, 256).TrimEnd('\0');
-                            break;
-                        }
-                    // 32Bit Ints
-                    case 4:
-                        {
-                            asset[property.Item1] = BitConverter.ToInt32(assetBuffer, property.Item2);
-                            break;
-                        }
-                    // Bools (8Bit)
-                    case 5:
-                        {
-                            asset[property.Item1] = assetBuffer[property.Item2];
-                            break;
-                        }
-                    // Bools (8Bit)
-                    case 6:
-                        {
-                            asset[property.Item1] = assetBuffer[property.Item2];
-                            break;
-                        }
-                    // Bools (32bit)
-                    case 7:
-                        {
-                            asset[property.Item1] = BitConverter.ToInt32(assetBuffer, property.Item2);
-                            break;
-                        }
-                    // Floats
-                    case 8:
-                        {
-                            asset[property.Item1] = BitConverter.ToSingle(assetBuffer, property.Item2);
-                            break;
-                        }
-                    // Floats that get multiplied by 1000
-                    case 9:
-                        {
-                            asset[property.Item1] = BitConverter.ToInt32(assetBuffer, property.Item2) / 1000.0;
-                            break;
-                        }
-                    // Script Strings
-                    case 0x15:
-                        {
-                            asset[property.Item1] = instance.Game.GetString(BitConverter.ToInt32(assetBuffer, property.Item2), instance);
-                            break;
-                        }
-                    case 0xA:
-                        {
-                            var assetName = instance.Game.GetAssetName(BitConverter.ToInt64(assetBuffer, property.Item2), instance, 0);
-                            asset[property.Item1] = string.IsNullOrWhiteSpace(assetName) ? "" : "fx\\" + Path.ChangeExtension(assetName.Replace(@"/", @"\").Replace(@"\", @"\\"), ".efx");
-                            break;
-                        }
-                    case 0xB:
-                    case 0xD:
-                    case 0x10:
-                    case 0x11:
-                    case 0x12:
-                    case 0x13:
-                    case 0x14:
-                    case 0x16:
-                    case 0x17:
-                    case 0x19:
-                    case 0x1A:
-                    case 0x1B:
-                    case 0x1C:
-                    case 0x1D:
-                    case 0x1E:
-                    case 0x1F:
-                    case 0x20:
-                    case 0x21:
-                    case 0x22:
-                    case 0x23:
-                    case 0x24:
-                    case 0x25:
-                    case 0x26:
-                    case 0x27:
-                    case 0x28:
-                    case 0x29:
-                    case 0x2A:
-                    case 0x2C:
-                    case 0x2D:
-                    case 0x2F:
-                    case 0x30:
-                    case 0x31:
-                    case 0x32:
-                        {
-                            var assetName = instance.Game.GetAssetName(BitConverter.ToInt64(assetBuffer, property.Item2), instance, property.Item3 == 0x10 ? 0xF8 : 0);
-                            if (property.Item3 == 0xA)
-                                assetName = instance.Game.CleanAssetName(HydraAssetType.FX, assetName);
-                            asset[property.Item1] = assetName;
-                            break;
-                        }
-                    case 0x2B:
-                    case 0x2E:
-                        {
-                            var assetName = instance.Game.GetAssetName(BitConverter.ToInt64(assetBuffer, property.Item2), instance, 0x1B0);
-                            asset[property.Item1] = assetName;
-                            break;
-                        }
-                    case 0x18:
-                        {
-                            asset[property.Item1] = BlackOps3.GetAliasByHash(BitConverter.ToUInt32(assetBuffer, property.Item2));
-                            break;
-                        }
-                    default:
-                        {
-                            // Attempt to use the extended data handler, otherwise null
-                            var result = extendedDataHandler?.Invoke(assetBuffer, property.Item2, property.Item3, instance);
-
-                            if (result != null)
-                            {
-                                asset[property.Item1] = result;
-                            }
-                            else
-                            {
-                                asset[property.Item1] = "";
-#if DEBUG
-                                Console.WriteLine("Unknown Value: {0} - {1} - {2}", property.Item3, property.Item2, property.Item1);
-#endif
-                            }
-                            // Done
-                            break;
-                        }
-                }
-
-                //assetBuffer[property.Item2] = 0xAF;
-            }
-
-            // Done
-            return asset;
         }
     }
 }

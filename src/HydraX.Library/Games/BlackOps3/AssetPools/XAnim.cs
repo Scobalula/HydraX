@@ -67,7 +67,7 @@ namespace HydraX.Library
             /// Raw File Asset Structure
             /// </summary>
             [StructLayout(LayoutKind.Sequential, Pack = 8)]
-            private struct XAnimAsset
+            private unsafe struct XAnimAsset
             {
                 public long NamePointer;
                 public int RandomDataByteCount;
@@ -78,12 +78,9 @@ namespace HydraX.Library
                 public int RandomDataIntCount;
                 public ushort FrameCount;
                 public ushort BoneCount;
-                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 12)]
-                public byte[] Flags;
-                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
-                public ushort[] BoneCounts; // Above is total, this is across different part types, index using the Parts enum
-                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-                public byte[] Flags2;
+                public fixed byte Flags[12];
+                public fixed ushort BoneCounts[10]; // Above is total, this is across different part types, index using the Parts enum
+                public fixed byte Flags2[4];
                 public int RandomDataShortCount;
                 public int IndexCount;
                 public float FrameRate;
@@ -103,8 +100,9 @@ namespace HydraX.Library
                 public long IndicesPointer;
                 public long IKPitchLayersPointer;
                 public long IKPitchBonesPointer;
-                [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-                public XAnimNotifies[] Notetracks; // Note, Startup, Shutdown
+                public XAnimNotifies Notes;
+                public XAnimNotifies StartupNotes;
+                public XAnimNotifies ShutdownNotes;
                 public long DeltaPartsPointer;
 
                 /// <summary>
@@ -126,9 +124,9 @@ namespace HydraX.Library
                     if (IKPitchLayersPointer > 0) IKPitchLayersPointer       = 0x4C554C38304335;
                     if (DeltaPartsPointer > 0) DeltaPartsPointer             = 0x4C554C38304335;
 
-                    for(int i = 0; i < Notetracks.Length; i++)
-                        if (Notetracks[i].NotifyInfoPointer > 0)
-                            Notetracks[i].NotifyInfoPointer = 0x4C554C38304335;
+                    if (Notes.NotifyInfoPointer > 0) Notes.NotifyInfoPointer = 0x4C554C38304335;
+                    if (StartupNotes.NotifyInfoPointer > 0) Notes.NotifyInfoPointer = 0x4C554C38304335;
+                    if (ShutdownNotes.NotifyInfoPointer > 0) Notes.NotifyInfoPointer = 0x4C554C38304335;
                 }
             }
 
@@ -227,11 +225,11 @@ namespace HydraX.Library
             /// <summary>
             /// Loads Assets from this Asset Pool
             /// </summary>
-            public List<GameAsset> Load(HydraInstance instance)
+            public unsafe List<Asset> Load(HydraInstance instance)
             {
-                var results = new List<GameAsset>();
+                var results = new List<Asset>();
 
-                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.BaseAddress + instance.Game.AssetPoolsAddresses[instance.Game.ProcessIndex] + (Index * 0x20));
+                var poolInfo = instance.Reader.ReadStruct<AssetPoolInfo>(instance.Game.AssetPoolsAddress + (Index * 0x20));
 
                 StartAddress = poolInfo.PoolPointer;
                 AssetSize = poolInfo.AssetSize;
@@ -239,9 +237,11 @@ namespace HydraX.Library
 
                 var voidXAnim = new XAnimAsset();
 
-                for(int i = 0; i < AssetCount; i++)
+                var headers = instance.Reader.ReadArrayUnsafe<XAnimAsset>(StartAddress, AssetCount);
+
+                for (int i = 0; i < AssetCount; i++)
                 {
-                    var header = instance.Reader.ReadStruct<XAnimAsset>(StartAddress + (i * AssetSize));
+                    var header = headers[i];
 
                     if (IsNullAsset(header.NamePointer))
                         continue;
@@ -255,13 +255,17 @@ namespace HydraX.Library
                         header.RandomDataShortPointer != voidXAnim.RandomDataShortPointer &&
                         header.RandomDataIntPointer   != voidXAnim.RandomDataBytePointer)
                     {
-                        results.Add(new GameAsset()
+                        var address = StartAddress + (i * AssetSize);
+
+                        results.Add(new Asset()
                         {
-                            Name = name,
-                            HeaderAddress = StartAddress + (i * AssetSize),
-                            AssetPool = this,
-                            Type = Name,
-                            Information = string.Format("Bones: {0} Frames: {1} Type: {2}", header.BoneCount, header.FrameCount, XAnimTypes[header.Flags2[0]])
+                            Name        = instance.Reader.ReadNullTerminatedString(header.NamePointer),
+                            Type        = Name,
+                            Zone        = ((BlackOps3)instance.Game).ZoneNames[address],
+                            Information = string.Format("Bones: {0} Frames: {1} Type: {2}", header.BoneCount, header.FrameCount, XAnimTypes[header.Flags2[0]]),
+                            Status      = "Loaded",
+                            Data        = address,
+                            LoadMethod  = ExportAsset,
                         });
                     }
                     else if(name == "void")
@@ -269,8 +273,6 @@ namespace HydraX.Library
                         voidXAnim = header;
                         continue;
                     }
-
-
                 }
 
                 return results;
@@ -279,12 +281,12 @@ namespace HydraX.Library
             /// <summary>
             /// Exports the given asset from this pool
             /// </summary>
-            public HydraStatus Export(GameAsset asset, HydraInstance instance)
+            public void ExportAsset(Asset asset, HydraInstance instance)
             {
-                var xanimAsset = instance.Reader.ReadStruct<XAnimAsset>(asset.HeaderAddress);
+                var xanimAsset = instance.Reader.ReadStruct<XAnimAsset>((long)asset.Data);
 
                 if (asset.Name != instance.Reader.ReadNullTerminatedString(xanimAsset.NamePointer))
-                    return HydraStatus.MemoryChanged;
+                    throw new Exception("The asset at the expect memory address has changed. Press the Load Game button to refresh the asset list.");
 
                 string path = Path.Combine("exported_files", instance.Game.Name, "share", "raw", "xanim", asset.Name + ".xanim_raw");
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
@@ -292,7 +294,7 @@ namespace HydraX.Library
                 using (var writer = new BinaryWriter(File.Create(path)))
                 using (var infoWriter = new StreamWriter(path + ".info.txt"))
                 {
-                    var fileHeader = instance.Reader.ReadStruct<XAnimAsset>(asset.HeaderAddress);
+                    var fileHeader = instance.Reader.ReadStruct<XAnimAsset>((long)asset.Data);
                     fileHeader.ConvertPointers();
 
                     writer.WriteStruct(fileHeader);
@@ -302,42 +304,22 @@ namespace HydraX.Library
                     for (int i = 0; i < xanimAsset.BoneCount; i++)
                         writer.WriteNullTerminatedString(instance.Game.GetString(instance.Reader.ReadInt32(xanimAsset.NamesPointer + i * 4), instance));
 
-                    writer.Write(instance.Reader.ReadBytes(xanimAsset.DataBytePointer,          xanimAsset.DataByteCount));
-                    writer.Write(instance.Reader.ReadBytes(xanimAsset.DataShortPointer,         xanimAsset.DataShortCount * 2));
-                    writer.Write(instance.Reader.ReadBytes(xanimAsset.DataIntPointer,           xanimAsset.DataIntCount * 4));
-                    writer.Write(instance.Reader.ReadBytes(xanimAsset.RandomDataBytePointer,    xanimAsset.RandomDataByteCount));
-                    writer.Write(instance.Reader.ReadBytes(xanimAsset.RandomDataShortPointer,   xanimAsset.RandomDataShortCount * 2));
-                    writer.Write(instance.Reader.ReadBytes(xanimAsset.RandomDataIntPointer,     xanimAsset.RandomDataIntCount * 4));
-                    writer.Write(instance.Reader.ReadBytes(xanimAsset.ExtraChannelDataPointer,  xanimAsset.ExtraChannelDataCount));
-                    writer.Write(instance.Reader.ReadBytes(xanimAsset.IKPitchLayersPointer,     xanimAsset.IKPitchLayerCount * 8));
-                    writer.Write(instance.Reader.ReadBytes(xanimAsset.IKPitchBonesPointer,      xanimAsset.IKPitchBoneCount * 28));
+                    writer.Write(instance.Reader.ReadBytes(xanimAsset.DataBytePointer, xanimAsset.DataByteCount));
+                    writer.Write(instance.Reader.ReadBytes(xanimAsset.DataShortPointer, xanimAsset.DataShortCount * 2));
+                    writer.Write(instance.Reader.ReadBytes(xanimAsset.DataIntPointer, xanimAsset.DataIntCount * 4));
+                    writer.Write(instance.Reader.ReadBytes(xanimAsset.RandomDataBytePointer, xanimAsset.RandomDataByteCount));
+                    writer.Write(instance.Reader.ReadBytes(xanimAsset.RandomDataShortPointer, xanimAsset.RandomDataShortCount * 2));
+                    writer.Write(instance.Reader.ReadBytes(xanimAsset.RandomDataIntPointer, xanimAsset.RandomDataIntCount * 4));
+                    writer.Write(instance.Reader.ReadBytes(xanimAsset.ExtraChannelDataPointer, xanimAsset.ExtraChannelDataCount));
+                    writer.Write(instance.Reader.ReadBytes(xanimAsset.IKPitchLayersPointer, xanimAsset.IKPitchLayerCount * 8));
+                    writer.Write(instance.Reader.ReadBytes(xanimAsset.IKPitchBonesPointer, xanimAsset.IKPitchBoneCount * 28));
 
-                    for (int i = 0; i < xanimAsset.Notetracks.Length; i++)
-                    {
-                        var notifyInfo = instance.Reader.ReadArray<XAnimNotifyInfo>(xanimAsset.Notetracks[i].NotifyInfoPointer, xanimAsset.Notetracks[i].Count);
-
-                        foreach (var notify in notifyInfo)
-                        {
-                            var time = notify.Time;
-                            var type = instance.Game.GetString(notify.Type, instance);
-                            var p1   = instance.Game.GetString(notify.Param1, instance);
-                            var p2   = instance.Game.GetString(notify.Param2, instance);
-
-                            writer.Write(time);
-                            writer.WriteNullTerminatedString(type);
-                            writer.WriteNullTerminatedString(p1);
-                            writer.WriteNullTerminatedString(p2);
-
-                            infoWriter.WriteLine("Time:     {0}", time);
-                            infoWriter.WriteLine("Type:     {0}", type);
-                            infoWriter.WriteLine("Param1:   {0}", p1);
-                            infoWriter.WriteLine("Param2:   {0}", p2);
-                            infoWriter.WriteLine();
-                        }
-                    }
+                    WriteNotetracks(xanimAsset.Notes,           infoWriter, writer, instance);
+                    WriteNotetracks(xanimAsset.StartupNotes,    infoWriter, writer, instance);
+                    WriteNotetracks(xanimAsset.ShutdownNotes,   infoWriter, writer, instance);
 
                     // Delta data requires a bit more work
-                    if(xanimAsset.DeltaPartsPointer > 0)
+                    if (xanimAsset.DeltaPartsPointer > 0)
                     {
                         var xanimDeltaParts = instance.Reader.ReadStruct<XAnimDeltaPart>(xanimAsset.DeltaPartsPointer);
                         var xanimDeltaPartsFile = instance.Reader.ReadStruct<XAnimDeltaPart>(xanimAsset.DeltaPartsPointer);
@@ -345,7 +327,7 @@ namespace HydraX.Library
 
                         writer.WriteStruct(xanimDeltaPartsFile);
 
-                        if(xanimDeltaParts.TranslationsPointer > 0)
+                        if (xanimDeltaParts.TranslationsPointer > 0)
                         {
                             var translationCount = instance.Reader.ReadUInt16(xanimDeltaParts.TranslationsPointer) + 1;
                             var byteTranslations = instance.Reader.ReadUInt16(xanimDeltaParts.TranslationsPointer + 2);
@@ -408,16 +390,30 @@ namespace HydraX.Library
                         }
                     }
                 }
-
-                return HydraStatus.Success;
             }
 
-            /// <summary>
-            /// Checks if the given asset is a null slot
-            /// </summary>
-            public bool IsNullAsset(GameAsset asset)
+            private void WriteNotetracks(XAnimNotifies notifies, StreamWriter infoWriter, BinaryWriter writer, HydraInstance instance)
             {
-                return IsNullAsset(asset.NameLocation);
+                var notifyInfo = instance.Reader.ReadArrayUnsafe<XAnimNotifyInfo>(notifies.NotifyInfoPointer, notifies.Count);
+
+                foreach (var notify in notifyInfo)
+                {
+                    var time = notify.Time;
+                    var type = instance.Game.GetString(notify.Type, instance);
+                    var p1 = instance.Game.GetString(notify.Param1, instance);
+                    var p2 = instance.Game.GetString(notify.Param2, instance);
+
+                    writer.Write(time);
+                    writer.WriteNullTerminatedString(type);
+                    writer.WriteNullTerminatedString(p1);
+                    writer.WriteNullTerminatedString(p2);
+
+                    infoWriter.WriteLine("Time:     {0}", time);
+                    infoWriter.WriteLine("Type:     {0}", type);
+                    infoWriter.WriteLine("Param1:   {0}", p1);
+                    infoWriter.WriteLine("Param2:   {0}", p2);
+                    infoWriter.WriteLine();
+                }
             }
 
             /// <summary>
