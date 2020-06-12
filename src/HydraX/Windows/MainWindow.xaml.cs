@@ -127,7 +127,6 @@ namespace HydraX
             });
 
             Instance.FlushGDTs();
-            Instance.Settings.Save("Settings.json");
         }
 
         /// <summary>

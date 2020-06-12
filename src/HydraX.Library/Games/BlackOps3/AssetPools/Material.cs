@@ -352,7 +352,6 @@ namespace HydraX.Library
 
                 foreach (var result in ExportMTL(header, instance))
                 {
-                    result.Name = asset.Name;
                     instance.AddGDTAsset(result, result.Type, result.Name);
                 }
             }

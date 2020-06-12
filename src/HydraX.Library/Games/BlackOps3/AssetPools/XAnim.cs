@@ -288,7 +288,7 @@ namespace HydraX.Library
                 if (asset.Name != instance.Reader.ReadNullTerminatedString(xanimAsset.NamePointer))
                     throw new Exception("The asset at the expect memory address has changed. Press the Load Game button to refresh the asset list.");
 
-                string path = Path.Combine("exported_files", instance.Game.Name, "share", "raw", "xanim", asset.Name + ".xanim_raw");
+                string path = Path.Combine("exported_files", instance.Game.Name, "share", "raw", "xanim_raw", asset.Name + ".xanim_raw");
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
                 using (var writer = new BinaryWriter(File.Create(path)))
