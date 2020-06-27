@@ -239,6 +239,8 @@ namespace HydraX.Library
                     CameraSwitches = new XCamObj.CameraSwitch[header.CameraSwitchPointer > 0 ? header.FrameCount : 0]
                 };
 
+                int frameCount = 0;
+
                 var cameras = instance.Reader.ReadArray<XCamCamera>(header.CamerasPointer, header.CameraCount);
 
                 for(int i = 0; i < cameras.Length; i++)
@@ -281,7 +283,10 @@ namespace HydraX.Library
                         xcam.Cameras[i].Animations[j].FocalLength = animations[i].FocalLength;
                         xcam.Cameras[i].Animations[j].FDist       = animations[i].FDist;
                         xcam.Cameras[i].Animations[j].FStop       = animations[i].FStop;
-                        xcam.Cameras[i].Animations[j].Frame       = animations[i].Frame;
+                        xcam.Cameras[i].Animations[j].Frame       = j;
+
+                        if ((j + 1) > frameCount)
+                            frameCount = j + 1;
 
                         if (j == 0)
                         {
@@ -355,6 +360,9 @@ namespace HydraX.Library
                         };
                     }
                 }
+
+
+                xcam.FrameCount = frameCount;
 
                 xcam.Save(path);
 
