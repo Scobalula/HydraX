@@ -163,6 +163,9 @@ namespace HydraX.Library
                     {
                         foreach (var result in Material.ExportMTL(instance.Reader.ReadStruct<Material.MaterialAsset>(mtlPointer), instance))
                         {
+                            if (instance.ExistsInGDTDB(result.Type, result.Name))
+                                continue;
+
                             gdt[result.Type, result.Name] = result;
                         }
                     }
@@ -209,7 +212,10 @@ namespace HydraX.Library
                     xmodelAsset.Properties[string.Format("submodel{0}_ParentTag", i)] = instance.Game.GetString(subModels[i].TagIndex, instance);
                 }
 
-                gdt[xmodelAsset.Type, xmodelAsset.Name] = xmodelAsset;
+                if (instance.ExistsInGDTDB(xmodelAsset.Type, xmodelAsset.Name))
+                {
+                    gdt[xmodelAsset.Type, xmodelAsset.Name] = xmodelAsset;
+                }
                 var path = Path.Combine(instance.ExportFolder, "model_export", "hydra_model_gdts", asset.Name + ".gdt");
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 gdt.Save(path);

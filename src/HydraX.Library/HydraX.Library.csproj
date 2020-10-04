@@ -58,6 +58,9 @@
       <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
+    <Reference Include="SELib">
+      <HintPath>..\HydraX\SELib.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.SQLite">
@@ -109,6 +112,7 @@
     <Compile Include="Games\BlackOps3\AssetPools\PhysicsPreset.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\PlayerFXTable.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\PlayerSoundsTable.cs" />
+    <Compile Include="Games\BlackOps3\AssetPools\SAnim.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\RawFile.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\Rumble.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\ScriptBundle.cs" />
