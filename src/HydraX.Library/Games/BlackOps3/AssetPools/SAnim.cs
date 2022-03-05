@@ -272,9 +272,9 @@ namespace HydraX.Library
                             (
                                 $"smod_bone{boneIndex}",
                                 frame,
-                                new HalfFloat(dataReader.ReadUInt16()),
-                                new HalfFloat(dataReader.ReadUInt16()),
-                                new HalfFloat(dataReader.ReadUInt16())
+                                new HalfFloat(dataReader.ReadUInt16()) * 2.54f,
+                                new HalfFloat(dataReader.ReadUInt16()) * 2.54f,
+                                new HalfFloat(dataReader.ReadUInt16()) * 2.54f
                             );
 
                             // Skip padding

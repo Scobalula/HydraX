@@ -189,7 +189,7 @@ namespace PhilLibX.IO
                 if (result[sizeOf] == 0x0)
                     break;
             }
-            return Encoding.ASCII.GetString(result, sizeOf);
+            return Encoding.UTF8.GetString(result, sizeOf);
         }
 
         /// <summary>
