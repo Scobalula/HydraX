@@ -17,15 +17,15 @@ namespace HydraX.Library
         /// </summary>
         public enum DataTypes : int
         {
-            Image            = 0xF,
-            Anim             = 0x3,
-            PlayerAnim       = 0x4,
-            XCam             = 0xD,
-            XModel           = 0x6,
             XString          = 0x0,
-            FX               = 0x9,
             Int              = 0x1,
             Float            = 0x2,
+            Anim             = 0x3,
+            PlayerAnim       = 0x4,
+            XModel           = 0x6,
+            FX               = 0x9,
+            XCam             = 0xD,
+            Image            = 0xF,
             Bool,
         }
         #endregion

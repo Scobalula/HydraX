@@ -8,6 +8,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Text;
 // TODO: Speed up Read
@@ -205,7 +206,7 @@ namespace HydraX.Library
                         writer.WriteLine("\t{");
 
                         // Write Settings by KVP
-                        foreach (var setting in asset.Value.Properties)
+                        foreach (var setting in asset.Value.Properties.OrderBy(p => p.Key))
                             writer.WriteLine("\t\t\"{0}\" \"{1}\"", setting.Key, setting.Value);
 
                         // Write end bracket
