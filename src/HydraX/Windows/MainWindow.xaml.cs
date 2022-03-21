@@ -188,18 +188,21 @@ namespace HydraX
             {
                 Log("HydraX failed to find a supported game, please ensure one of them is running.", "ERROR");
                 MessageBox.Show("HydraX failed to find a supported game, please ensure one of them is running.", "HydraX | Oops", MessageBoxButton.OK, MessageBoxImage.Error);
+                Title = "HydraX";
                 Instance.Clear();
             }
             else if (e.Error is GameNotSupportedException gnsException)
             {
                 Log(string.Format("HydraX supports {0}, but not this version of it, if the game was recently updated, please wait for an update to HydraX.", gnsException.GameName), "ERROR");
                 MessageBox.Show(string.Format("HydraX supports {0}, but not this version of it, if the game was recently updated, please wait for an update to HydraX.", gnsException.GameName), "HydraX | Oops", MessageBoxButton.OK, MessageBoxImage.Error);
+                Title = "HydraX";
                 Instance.Clear();
             }
             else if(e.Error is Exception exception)
             {
                 Log(string.Format("An unhandled exception has occurred, take this to my creator:\n\n{0}", exception), "ERROR");
                 MessageBox.Show(string.Format("An unhandled exception has occurred, take this to my creator:\n\n{0}", exception), "HydraX | Oops", MessageBoxButton.OK, MessageBoxImage.Error);
+                Title = "HydraX";
                 Instance.Clear();
             }
         }

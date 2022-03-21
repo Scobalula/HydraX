@@ -116,7 +116,7 @@ namespace PhilLibX.IO
         public static string ReadFixedString(this BinaryReader br, int numBytes)
         {
             // Purge Null Bytes and Return 
-            return Encoding.ASCII.GetString(br.ReadBytes(numBytes)).TrimEnd('\0');
+            return Encoding.UTF8.GetString(br.ReadBytes(numBytes)).TrimEnd('\0');
         }
 
         /// <summary>
@@ -238,7 +238,7 @@ namespace PhilLibX.IO
         public static long[] FindString(this BinaryReader br, string needle, bool firstOccurence = false)
         {
             // Convert to bytes and scan
-            return br.FindBytes(Encoding.ASCII.GetBytes(needle), firstOccurence);
+            return br.FindBytes(Encoding.UTF8.GetBytes(needle), firstOccurence);
         }
 
         /// <summary>

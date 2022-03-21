@@ -112,6 +112,7 @@
     <Compile Include="Games\BlackOps3\AssetPools\PhysicsPreset.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\PlayerFXTable.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\PlayerSoundsTable.cs" />
+    <Compile Include="Games\BlackOps3\AssetPools\MapEnts.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\SAnim.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\RawFile.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\Rumble.cs" />
