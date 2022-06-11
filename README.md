@@ -24,6 +24,7 @@ HydraX can decompile/export the following asset types:
 | laser                            | Misc                             |
 | flametable                       | Weapon                           |
 | customizationtable               | Misc                             |
+| maptable                         | Misc                             |
 | shellshock                       | Physics                          |
 | ttf                              | Raw File                         |
 | aitype                           | AI                               |

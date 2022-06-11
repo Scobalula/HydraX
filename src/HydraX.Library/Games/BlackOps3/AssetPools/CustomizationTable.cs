@@ -317,10 +317,10 @@ namespace HydraX.Library
                     playerBodyType["defaultHeroRenderAbility"]           = instance.Game.GetAssetName(playerBodyTypes[i].DefaultHeroRenderAbilityPointer, instance, 0xF8);
                     playerBodyType["defaultHeroRender"]                  = instance.Game.GetAssetName(playerBodyTypes[i].DefaultHeroRenderPointer, instance, 0xF8);
                     playerBodyType["description"]                        = instance.Reader.ReadNullTerminatedString(playerBodyTypes[i].DescriptionPointer);
-                    playerBodyType["disabled"]                           = playerBodyTypes[i].Disabled;
+                    playerBodyType["disabled"]                           = playerBodyTypes[i].Disabled ? 1 : 0;
                     playerBodyType["displayName"]                        = instance.Reader.ReadNullTerminatedString(playerBodyTypes[i].DisplayNamePointer);
-                    playerBodyType["dogTagEnemy"]                        = instance.Game.GetAssetName(playerBodyTypes[i].DogTagEnemyPointer, instance);
-                    playerBodyType["dogtagFriendly"]                     = instance.Game.GetAssetName(playerBodyTypes[i].DogtagFriendlyPointer, instance);
+                    playerBodyType["dogtagenemy"]                        = instance.Game.GetAssetName(playerBodyTypes[i].DogTagEnemyPointer, instance);
+                    playerBodyType["dogtagfriendly"]                     = instance.Game.GetAssetName(playerBodyTypes[i].DogtagFriendlyPointer, instance);
                     playerBodyType["frontendVignetteStruct"]             = instance.Reader.ReadNullTerminatedString(playerBodyTypes[i].FrontendVignetteStructPointer);
                     playerBodyType["frontendVignetteWeaponModel"]        = instance.Reader.ReadNullTerminatedString(playerBodyTypes[i].FrontendVignetteWeaponModelPointer);
                     playerBodyType["frontendVignetteXAnim"]              = instance.Reader.ReadNullTerminatedString(playerBodyTypes[i].FrontendVignetteXAnimPointer);
@@ -333,7 +333,7 @@ namespace HydraX.Library
                     playerBodyType["heroAbility"]                        = instance.Reader.ReadNullTerminatedString(playerBodyTypes[i].HeroAbilityPointer);
                     playerBodyType["heroWeapon"]                         = instance.Reader.ReadNullTerminatedString(playerBodyTypes[i].HeroWeaponPointer);
                     playerBodyType["lockedImage"]                        = instance.Reader.ReadNullTerminatedString(playerBodyTypes[i].LockedImagePointer);
-                    playerBodyType["mpDialog"]                           = instance.Reader.ReadNullTerminatedString(playerBodyTypes[i].MpDialogPointer);
+                    playerBodyType["mpDialog"]                           = instance.Game.GetAssetName(playerBodyTypes[i].MpDialogPointer, instance);
                     playerBodyType["personalizeRender"]                  = instance.Reader.ReadNullTerminatedString(playerBodyTypes[i].PersonalizeRenderPointer);
                     playerBodyType["realName"]                           = instance.Reader.ReadNullTerminatedString(playerBodyTypes[i].RealNamePointer);
                     playerBodyType["rewardIcon"]                         = instance.Reader.ReadNullTerminatedString(playerBodyTypes[i].RewardIconPointer);
@@ -427,14 +427,22 @@ namespace HydraX.Library
                     for(int j = 0; j < dataBlocks.Length; j++)
                     {
                         // Determine type if we're int, since bool and int share same, but the pointer value will be different? (only 2 are bool anyway but just in case)
-                        var dataType = dataBlocks[i].DataType;
+                        var dataType = dataBlocks[j].DataType;
 
-                        if (dataType == DataTypes.Int && (dataBlocks[i].DataPointer & 0xFFFFFFFF) != dataBlocks[i].Data)
+                        if (dataType == DataTypes.Int && (dataBlocks[j].DataPointer & 0xFFFFFFFF) != dataBlocks[j].Data)
                             dataType = DataTypes.Bool;
 
-                        string propertyName = string.Format("{0}_{1}", dataType.ToString().ToLower(), instance.Game.GetString(dataBlocks[i].DataNameStringIndex, instance));
+                        string propertyName = string.Format("{0}_{1}", dataType.ToString().ToLower(), instance.Game.GetString(dataBlocks[j].DataNameStringIndex, instance));
 
-                        playerBodyType[propertyName] = dataBlocks[i].DataType == DataTypes.Int ? dataBlocks[i].Data.ToString() : instance.Game.GetString(dataBlocks[i].DataStringIndex, instance);
+                        string propertyValue = instance.Game.GetString(dataBlocks[j].DataStringIndex, instance);
+                        if (dataType == DataTypes.FX)
+                            propertyValue = $"fx\\\\{propertyValue.Replace("/", "\\\\")}.efx";
+                        
+                        // No idea why, in the tools it's like this but in-game the datatype makes it xstring
+                        if (propertyName.Contains("challengeSpecialist"))
+                            propertyName = "streamedimage_challengeSpecialist";
+
+                        playerBodyType[propertyName] = dataBlocks[j].DataType == DataTypes.Int ? dataBlocks[j].Data.ToString() : propertyValue;
                     }
 
                     customizationTable["bodyType" + (i + 1).ToString("00")] = playerBodyType.Name;
