@@ -140,7 +140,7 @@ namespace HydraX.Library
                     // Loop through columns for this row
                     for (int y = 0; y < header.ColumnCount; y++)
                         // Add cell
-                        result.Append(instance.Reader.ReadNullTerminatedString(Bytes.BytesToStruct<StringTableAsset.Cell>(buffer, ((x * header.ColumnCount) + y) * 16).StringPointer) + ",");
+                        result.Append(instance.Reader.ReadNullTerminatedString(Bytes.BytesToStruct<StringTableAsset.Cell>(buffer, ((x * header.ColumnCount) + y) * 16).StringPointer, 512) + ",");
                     // Create new line
                     result.AppendLine();
                 }
