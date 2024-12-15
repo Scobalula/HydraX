@@ -2330,7 +2330,7 @@ namespace HydraX.Library
                 // XAsset Buffer
                 Buffer.BlockCopy(buffer, 0, assetBuffer, 0, buffer.Length);
                 // Weapon Settings
-                Buffer.BlockCopy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 24),          5161),          0, assetBuffer,         768,            5161);
+                Buffer.BlockCopy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 24),          5616),          0, assetBuffer,         768,            5616);
                 // Attachments (Not needed, just here for clarity and if ever needed, set by the AUs)
                 Buffer.BlockCopy(instance.Reader.ReadBytes(BitConverter.ToInt64(buffer, 56),          512),           0, assetBuffer,         6736,           512);
                 // Attachment Uniques (Not needed, just here for clarity and if ever needed, set Attachment Unique Base in APE)
