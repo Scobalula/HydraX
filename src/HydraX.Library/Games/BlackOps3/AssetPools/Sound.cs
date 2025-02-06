@@ -1007,7 +1007,7 @@ namespace HydraX.Library
 
                         results.Add(new Asset()
                         {
-                            Name = instance.Reader.ReadNullTerminatedString(header.NamePointer),
+                            Name = instance.Reader.ReadNullTerminatedString(header.NamePointer).Replace(':', '_'),
                             Type        = Name,
                             Status      = "Loaded",
                             Data        = address,
@@ -1349,7 +1349,7 @@ namespace HydraX.Library
             {
                 var header = instance.Reader.ReadStruct<SoundAsset>((long)asset.Data);
 
-                if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer).Split(':')[0])
+                if (asset.Name != instance.Reader.ReadNullTerminatedString(header.NamePointer).Replace(':', '_'))
                     throw new Exception("The asset at the expect memory address has changed. Press the Load Game button to refresh the asset list.");
 
                 Directory.CreateDirectory(instance.SoundZoneFolder);

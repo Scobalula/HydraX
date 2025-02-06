@@ -64,7 +64,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.SQLite">
-      <HintPath>G:\SteamLibrary\steamapps\common\Call of Duty Black Ops III\gdtdb\System.Data.SQLite.dll</HintPath>
+      <HintPath>F:\SteamLibrary\steamapps\common\Call of Duty Black Ops III\gdtdb\System.Data.SQLite.dll</HintPath>
     </Reference>
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Numerics" />
@@ -107,6 +107,7 @@
     <Compile Include="Games\BlackOps3\AssetPools\ImpactSoundsTable.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\Laser.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\Localize.cs" />
+    <Compile Include="Games\BlackOps3\AssetPools\MapTable.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\Material.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\PhysicsConstraints.cs" />
     <Compile Include="Games\BlackOps3\AssetPools\PhysicsPreset.cs" />
