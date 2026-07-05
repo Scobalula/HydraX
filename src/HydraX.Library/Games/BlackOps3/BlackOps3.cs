@@ -361,6 +361,11 @@ namespace HydraX.Library
 
         public string GetString(long index, HydraInstance instance)
         {
+            // Cordycep stores script strings by offset within its own string pool, offset 0 is never
+            // assigned and matches the game's empty string at index 0
+            if (IsCordycep)
+                return index <= 0 ? "" : instance.Reader.ReadNullTerminatedString(CordycepStringsAddress + index);
+
             return instance.Reader.ReadNullTerminatedString(instance.Game.StringPoolAddress + (0x1C * index) + 4);
         }
 
@@ -379,6 +384,9 @@ namespace HydraX.Library
 
         public bool Initialize(HydraInstance instance)
         {
+            if (IsCordycep)
+                return InitializeCordycep(instance);
+
             var module = instance.Reader.Modules[0];
             bool isWindowsStore = instance.Reader.ReadInt16(module.BaseAddress.ToInt64() + 0x3C) == 0x1A0; // NOTE(serious): only works for a specific windows store executable (initial release -> current as of Jan 2025)
             

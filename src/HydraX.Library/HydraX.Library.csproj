@@ -153,6 +153,7 @@
     <Compile Include="Interfaces\IAssetPool.cs" />
     <Compile Include="Interfaces\IGame.cs" />
     <Compile Include="Games\BlackOps3\BlackOps3.cs" />
+    <Compile Include="Games\BlackOps3\BlackOps3Cordycep.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utility\HydraSettings.cs" />
     <Compile Include="Utility\Matrix.cs" />

@@ -6,6 +6,7 @@ using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace HydraX.Library
 {
@@ -268,6 +269,16 @@ namespace HydraX.Library
 
             Process[] processes = Process.GetProcesses();
 
+            // Prefer Cordycep if it's running with a supported handler initialized
+            foreach (var process in processes)
+            {
+                if (process.ProcessName.ToLower() == BlackOps3.CordycepProcessName)
+                {
+                    if (TryLoadCordycep(process))
+                        return;
+                }
+            }
+
             foreach (var process in processes)
             {
                 foreach (var game in Games)
@@ -309,6 +320,62 @@ namespace HydraX.Library
             }
 
             throw new GameNotFoundException();
+        }
+
+        /// <summary>
+        /// Attempts to load Black Ops III from Cordycep via its state file
+        /// </summary>
+        private bool TryLoadCordycep(Process process)
+        {
+            string stateFilePath;
+
+            try
+            {
+                stateFilePath = Path.Combine(Path.GetDirectoryName(process.MainModule.FileName), "Data", "CurrentHandler.csi");
+            }
+            catch
+            {
+                // Access denied, fall back to scanning for the game
+                return false;
+            }
+
+            // No handler initialized within Cordycep
+            if (!File.Exists(stateFilePath))
+                return false;
+
+            var stateFile = File.ReadAllBytes(stateFilePath);
+
+            if (stateFile.Length < 24)
+                return false;
+
+            // Not a game we support, fall back to scanning for the game
+            if (Encoding.ASCII.GetString(stateFile, 0, 8) != BlackOps3.CordycepGameID)
+                return false;
+
+            var game = new BlackOps3()
+            {
+                IsCordycep             = true,
+                AssetPoolsAddress      = BitConverter.ToInt64(stateFile, 8),
+                CordycepStringsAddress = BitConverter.ToInt64(stateFile, 16),
+            };
+
+            Game = game;
+            Reader = new ProcessReader(process);
+
+            if (Game.Initialize(this))
+            {
+                Game.AssetPools = GetAssetPools(Game);
+
+                foreach (var assetPool in Game.AssetPools)
+                    Assets.AddRange(assetPool.Load(this));
+
+                return true;
+            }
+            else
+            {
+                Clear();
+                throw new GameNotSupportedException(game.Name + " (Cordycep)");
+            }
         }
     }
 }
